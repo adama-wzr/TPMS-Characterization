@@ -1,0 +1,14 @@
+OutputName: SchwarzP_mesh.csv
+isoValue: 0.3
+nVoxels: 100
+TPMS: 1
+Verbose: 1
+Tau: 1
+pb: 1
+Convergence: 1e-6
+MaxIter: 1e6
+partSD: 1
+poreSD: 1
+poreSDOut: poreSD.csv
+partSDOut: partSD.csv
+nThreads: 8

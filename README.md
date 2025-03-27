@@ -29,7 +29,10 @@ The versions are often soft requirements, meaning they are the only versions we 
 - CMAKE 3.0 or newer
 - OpenMP (any recent version is fine)
 
-
 # Acknowledgements
+
+This work wouldn't be possible without the computational time awarded as part of the following grants:
+
+This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 from the Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support (ACCESS) program, which is supported by National Science Foundation grants #2138259, #2138286, #2138307, #2137603, and #2138296.
 
 # Upcoming Changes

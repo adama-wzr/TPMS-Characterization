@@ -20,6 +20,16 @@ In the `-arch=sm_XX`, replace the `XX` with your GPU compute capability (check i
 
 # Requiremets
 
+The versions are often soft requirements, meaning they are the only versions we have tested on, but might work on older versions.
+
+- NVIDIA Compute Capability >= 8.6
+- CUDA >= 11.5 (tested all the way up to 12.8)
+- gcc >= 11.0
+- C++17 or newer
+- CMAKE 3.0 or newer
+- OpenMP (any recent version is fine)
+
+
 # Acknowledgements
 
 # Upcoming Changes

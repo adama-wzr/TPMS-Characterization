@@ -18,6 +18,17 @@ nvcc -Xcompiler -openmp -std=c++17 -arch=sm_XX .\main.cu
 
 In the `-arch=sm_XX`, replace the `XX` with your GPU compute capability (check it (here)[https://developer.nvidia.com/cuda-gpus]).
 
+**New Method**: Instructions for how to build the code:
+
+- Download all the files from this repository. 
+- Create a new folder named "build".
+- Enter the new folder.
+- Use the following command: `cmake ..`
+- If all requirements are met, then the command above should be successful
+- Run `cmake --build . --config Release`
+- This will create a folder "Release" inside of the "build" folder.
+- Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found (Windows).
+
 # Requiremets
 
 The versions are often soft requirements, meaning they are the only versions we have tested on, but might work on older versions.

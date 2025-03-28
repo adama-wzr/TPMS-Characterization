@@ -1,13 +1,35 @@
 # This file obviously doesn't work, but we will make it one day, trust
-cmake_minimum_required(VERSION 3.00)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-find_package(OpenMP)
+# version information--------------------------
+project(TPMS-Characterization VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+# set(CMAKE_CXX_STANDARD 23)
+# set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-project(TPMS_Characterization VERSION 1.0)
+
+# Include directories -------------------------
+include_directories("
+    ${PROJECT_SOURCE_DIR}
+
+")
+
+enable_language(CUDA)
+
+# find_package(OpenMP)
+# find_package(CUDA)
+
+
+
+set(PROJECT_SOURCES
+    src/main.cu
+    src/helper.cuh
+)
 
 add_executable(
-    TPMS_Characterization main.cu helper.cuh
+    TPMS-Characterization
+    ${PROJECT_SOURCES}
 )
+
+set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
+target_compile_features(TPMS-Characterization PUBLIC cxx_std_23)

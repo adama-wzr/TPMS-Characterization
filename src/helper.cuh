@@ -267,6 +267,7 @@ void printOpts(options *opts)
     printf("--------------------------------------\n");
     printf("TPMS Type = %d\n", opts->TPMS_Type);
     printf("Dimension size = %d voxels\n", opts->nVoxels);
+    printf("Number of Threads = %d\n", opts->nThreads);
 
     if (opts->Tau)
         printf("Running Tortuosity\n");

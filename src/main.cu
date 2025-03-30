@@ -63,12 +63,6 @@ int main(int argc, char **argv)
 
     // Pore and Particle size distributions
 
-    omp_set_num_threads(opts.nThreads);
-
-    int numThreads = omp_get_num_threads();
-
-    printf("There are %d threads, requested %d\n", numThreads, opts.nThreads);
-
     if(opts.partSD)
         partSD_3D(&opts, &info, &save, P, 1);
     

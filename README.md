@@ -18,7 +18,7 @@ nvcc -Xcompiler -openmp -std=c++17 -arch=sm_XX .\main.cu
 
 In the `-arch=sm_XX`, replace the `XX` with your GPU compute capability (check it (here)[https://developer.nvidia.com/cuda-gpus]).
 
-**New Method**: Instructions for how to build the code:
+**New Method (Windows Only)**: Instructions for how to build the code:
 
 - Download all the files from this repository. 
 - Create a new folder named "build".
@@ -28,6 +28,8 @@ In the `-arch=sm_XX`, replace the `XX` with your GPU compute capability (check i
 - Run `cmake --build . --config Release`
 - This will create a folder "Release" inside of the "build" folder.
 - Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found (Windows).
+
+The current CMAKE file does not work on Ubuntu/Rocky (HPC), it fails to link the OpenMP library with the CUDA calls. I have no idea why it works on Windows but not on Linux.
 
 # Requiremets
 

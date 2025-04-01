@@ -5,11 +5,14 @@ cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 project(TPMS-Characterization LANGUAGES CXX CUDA VERSION 1.0)
 
 # Include directories -------------------------
-include_directories("
-    ${PROJECT_SOURCE_DIR}
-")
+include_directories(
+    TPMS-Characterization PUBLIC
+    "${PROJECT_SOURCE_DIR}"
+    "${PROJECT_SOURCE_DIR}/lib"
+)
 
-
+# Different methods are neede for Linux based systems and Windows
+# I don't know anyone with a Mac, so no build available for that
 
 if (WIN32)
     enable_language(CUDA)
@@ -21,16 +24,21 @@ if (UNIX)
     set(CMAKE_CUDA_COMPILER "nvcc")
 endif (UNIX)
 
+# Set Project Sources ----------------------------------------
+
 set(PROJECT_SOURCES
-    src/main.cu
-    src/helper.cuh
+    src/main.cpp
+    # src/helper.cuh
 )
+
+# Add Executable --------------------------------------------
 
 add_executable(
     TPMS-Characterization
     ${PROJECT_SOURCES}
 )
 
+# Compilation options to ensure this works with CUDA + OpenMP
 
 set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
 target_compile_features(TPMS-Characterization PUBLIC cxx_std_23)

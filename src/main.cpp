@@ -1,24 +1,27 @@
-#include <lib/surfaceArea.hpp>
+/*
+
+Main file will handle program execution.
+
+Last modified 04/01/2025
+Andre Adam
+*/
+
 #include <lib/TPMS_definitions.hpp>
 #include <lib/data_structures.hpp>
+#include <lib/usrInput.hpp>
 #include <math.h>
 
 
 int main(int argc, char **argv)
 {
-    meshInfo mesh;
-    saveInfo save;
+    // Declare data structure with general user options
+    options opts;
 
-    int sideLength = 100;
-    int nVoxels = pow(sideLength, 3);
-    char *P = (char *)malloc(sizeof(char) * nVoxels);
-    printf("Here!");
+    // Read user input
 
-    C_Y(P, 0.3, sideLength, &mesh);
+    char inputFilename[40];
 
-    SA(P, &mesh, &save);
-
-    printf("SSA = %1.3e\n", save.SA);
+    sprintf(inputFilename, "input.txt");
 
     return 0;
 }

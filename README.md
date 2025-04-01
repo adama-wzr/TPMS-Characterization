@@ -1,6 +1,17 @@
 # TPMS-Characterization
 This repository is dedicated to holding code pertaining to the characterization of TPMS structures with finite thicknesses.
 
+# Requiremets
+
+The versions are often soft requirements, meaning they are the only versions we have tested on, but might work on older versions.
+
+- NVIDIA Compute Capability >= 8.6
+- CUDA >= 11.5 (tested all the way up to 12.8)
+- gcc >= 11.0
+- C++17 or newer
+- CMAKE 3.0 or newer
+- OpenMP (any recent version is fine)
+
 # Compilation
 
 On Ubuntu, assuming CUDA is installed and in the $PATH, the compilation should be simple:
@@ -18,7 +29,7 @@ nvcc -Xcompiler -openmp -std=c++17 -arch=sm_XX .\main.cu
 
 In the `-arch=sm_XX`, replace the `XX` with your GPU compute capability (check it (here)[https://developer.nvidia.com/cuda-gpus]).
 
-**New Method (Windows Only)**: Instructions for how to build the code:
+**New Method**: Instructions for how to build the code:
 
 - Download all the files from this repository. 
 - Create a new folder named "build".
@@ -30,17 +41,6 @@ In the `-arch=sm_XX`, replace the `XX` with your GPU compute capability (check i
 - Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found (Windows).
 
 The current CMAKE file does not work on Ubuntu/Rocky (HPC), it fails to link the OpenMP library with the CUDA calls. I have no idea why it works on Windows but not on Linux.
-
-# Requiremets
-
-The versions are often soft requirements, meaning they are the only versions we have tested on, but might work on older versions.
-
-- NVIDIA Compute Capability >= 8.6
-- CUDA >= 11.5 (tested all the way up to 12.8)
-- gcc >= 11.0
-- C++17 or newer
-- CMAKE 3.0 or newer
-- OpenMP (any recent version is fine)
 
 # Acknowledgements
 

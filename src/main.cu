@@ -65,10 +65,16 @@ int main(int argc, char **argv)
 
     if(opts.partSD)
         partSD_3D(&opts, &info, &save, P, 1);
+    else
+        save.part50 = 0;
     
     if (opts.poreSD)
         poreSD_3D(&opts, &info, &save, P, 0);
+    else
+        save.pore50 = 0;
 
+    // Save the output
+    
     outputGeneral(&opts, &save);
 
     return 0;

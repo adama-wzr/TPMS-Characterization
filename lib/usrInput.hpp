@@ -15,7 +15,7 @@ Andre Adam
 #include <fstream>
 #include <string>
 #include <stdbool.h>
-#include <data_structures.hpp> 
+#include <data_structures.hpp>
 
 /*
 
@@ -35,6 +35,7 @@ void optionsInit(options *opts)
 
     opts->Tau = 0;
     opts->PB = 0;
+    opts->runSA = 0;
     opts->poreSD = 0;
     opts->partSD = 0;
     opts->CLeft = 0;
@@ -43,7 +44,7 @@ void optionsInit(options *opts)
     // Default Solver Options
     opts->nThreads = 1;
     opts->useGPU = 0;
-    opts->nGPU = 1;     // later need to add a GPU flag
+    opts->nGPU = 1;
 
     // Other Defauls
     opts->maxR = 1000;
@@ -62,6 +63,31 @@ void optionsInit(options *opts)
 
 /*
 
+Un-Initialized Options:
+
+*/
+
+void unInitOptions(options *opts)
+{
+    /*
+        unInitOptions:
+        Inputs:
+            - pointer to struct options
+        Outputs:
+            - None.
+        Function will free the memory that was allocated by
+        the options struct.
+    */
+
+    free(opts->outputFilename);
+    free(opts->partSDOut);
+    free(opts->poreSDOut);
+
+    return;
+}
+
+/*
+
 Print General options:
 
 */
@@ -74,7 +100,7 @@ void printOptsGeneral(options *opts)
             - pointer to usr inputs struct
         Outputs:
             - None
-        
+
         Function simply prints the user entered options to the command line.
     */
 
@@ -93,22 +119,22 @@ void printOptsGeneral(options *opts)
         printf("--------------------------------\n");
         printf("Tortuosity Simulation Enabled\n");
         printf("GPU Flag = %d\n", opts->useGPU);
-        if(opts->useGPU)
+        if (opts->useGPU)
             printf("GPUs Requested = %d\n", opts->nGPU);
-        
-        if(opts->PB)
+
+        if (opts->PB)
             printf("BC: Periodic\n");
         else
-            printf("BC: No Flux");
+            printf("BC: No Flux\n");
 
         printf("Solver Options:\n");
-        printf("SOR Jacobi Method\n");      // only option avaialable right now
+        printf("SOR Jacobi Method\n"); // only option avaialable right now
         printf("Maximum Iterations = %ld\n", opts->MAX_ITER);
-        printf("Convergence Type: Percent Change\n");   // also only options available
+        printf("Convergence Type: Percent Change\n"); // also only options available
         printf("Convergence Cutoff = %1.3e\n", opts->ConvergeCriteria);
     }
 
-    if(opts->poreSD)
+    if (opts->poreSD)
     {
         printf("--------------------------------\n");
         printf("Pore-Size Distribution Enabled\n");
@@ -116,7 +142,7 @@ void printOptsGeneral(options *opts)
         printf("Cutoff Radius = %d\n", opts->maxR);
     }
 
-    if(opts->partSD)
+    if (opts->partSD)
     {
         printf("--------------------------------\n");
         printf("Particle-Size Distribution Enabled\n");
@@ -124,9 +150,13 @@ void printOptsGeneral(options *opts)
         printf("Cutoff Radius = %d\n", opts->maxR);
     }
 
-   return;
-}
+    if (opts->runSA)
+        printf("Surface Area Calculation Enabled\n");
 
+    printf("----------------------------------\n\n");
+
+    return;
+}
 
 /*
 
@@ -208,7 +238,7 @@ void readInputGeneral(char *filename, options *opts)
         }
         else if (strcmp(tempC, "MaxIter:") == 0)
         {
-            opts->MAX_ITER = (long int) tempD;
+            opts->MAX_ITER = (long int)tempD;
         }
         else if (strcmp(tempC, "partSDOut:") == 0)
         {
@@ -222,14 +252,16 @@ void readInputGeneral(char *filename, options *opts)
         }
         else if (strcmp(tempC, "useGPU:") == 0)
         {
-            opts->useGPU = (int) tempD;
+            opts->useGPU = (int)tempD;
         }
         else if (strcmp(tempC, "numGPU:") == 0)
         {
-            opts->nGPU = (int) tempD;
+            opts->nGPU = (int)tempD;
         }
-
+        else if (strcmp(tempC, "runSA:") == 0)
+        {
+            opts->runSA = (int)tempD;
+        }
     }
-
     return;
 }

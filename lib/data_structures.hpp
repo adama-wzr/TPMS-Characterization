@@ -36,6 +36,7 @@ typedef struct
     int partSD;             // particle size distribution
     char *partSDOut;        // particle size distribution file name
     int maxR;               // maximum scan radius;
+    int runSA;              // calculate surface area flag
 } options;
 
 // Mesh related information

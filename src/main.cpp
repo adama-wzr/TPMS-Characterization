@@ -9,6 +9,7 @@ Andre Adam
 #include <lib/TPMS_definitions.hpp>
 #include <lib/data_structures.hpp>
 #include <lib/usrInput.hpp>
+#include <lib/TPMS_helpers.hpp>
 #include <math.h>
 
 
@@ -16,6 +17,8 @@ int main(int argc, char **argv)
 {
     // Declare data structure with general user options
     options opts;
+    meshInfo mesh;
+    saveInfo save;
 
     // Read user input
 
@@ -30,8 +33,11 @@ int main(int argc, char **argv)
 
     // Create TPMS
 
+    char *P;
+
+    TPMS_Init(P, &opts, &mesh);
+
+
     
-
-
     return 0;
 }

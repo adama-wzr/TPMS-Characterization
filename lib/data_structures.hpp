@@ -75,4 +75,8 @@ typedef struct
 
 typedef std::tuple<int, int, int> coord;
 
+// Declare the type of function pointers for TPMS definitions
+
+typedef int (*tpms_ptr)(char*, float, meshInfo*);
+
 #endif

@@ -17,7 +17,9 @@ Andre Adam
 #include <fstream>
 #include <string>
 #include <stdbool.h>
+
 #include <data_structures.hpp>
+#include <TPMS_helpers.hpp>
 
 /*
 
@@ -114,7 +116,7 @@ void printOptsGeneral(options *opts)
     printf("         Selected Options:        \n\n");
     printf("-----------------------------------\n");
 
-    printf("TPMS Type = %d\n", opts->TPMS_Type);
+    printf("TPMS Type = %s\n", TPMS_Names[opts->TPMS_Type - 1]);
     printf("IsoValues = %1.3f\n", opts->isoValues);
     printf("Side Length = %d\n", opts->nVoxels);
     printf("Number of CPU Threads = %d\n", opts->nThreads);

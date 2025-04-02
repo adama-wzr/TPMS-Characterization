@@ -12,3 +12,5 @@ poreSD: 1
 poreSDOut: poreSD.csv
 partSDOut: partSD.csv
 nThreads: 8
+useGPU: 1
+numGPU: 2

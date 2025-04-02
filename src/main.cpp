@@ -23,5 +23,11 @@ int main(int argc, char **argv)
 
     sprintf(inputFilename, "input.txt");
 
+    readInputGeneral(inputFilename, &opts);
+
+    if (opts.verbose)
+        printOptsGeneral(&opts);
+
+    
     return 0;
 }

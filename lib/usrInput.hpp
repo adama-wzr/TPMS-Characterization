@@ -15,8 +15,7 @@ Andre Adam
 #include <fstream>
 #include <string>
 #include <stdbool.h>
-#include <data_structures.hpp>
-
+#include <data_structures.hpp> 
 
 /*
 
@@ -43,6 +42,7 @@ void optionsInit(options *opts)
 
     // Default Solver Options
     opts->nThreads = 1;
+    opts->useGPU = 0;
     opts->nGPU = 1;     // later need to add a GPU flag
 
     // Other Defauls
@@ -58,6 +58,73 @@ void optionsInit(options *opts)
     opts->poreSDOut = (char *)malloc(200 * sizeof(char));
 
     return;
+}
+
+/*
+
+Print General options:
+
+*/
+
+void printOptsGeneral(options *opts)
+{
+    /*
+        printOptsGeneral:
+        Inputs:
+            - pointer to usr inputs struct
+        Outputs:
+            - None
+        
+        Function simply prints the user entered options to the command line.
+    */
+
+    printf("----------------------------------\n\n");
+    printf("         Selected Options:        \n\n");
+    printf("-----------------------------------\n");
+
+    printf("TPMS Type = %d\n", opts->TPMS_Type);
+    printf("IsoValues = %1.3f\n", opts->isoValues);
+    printf("Side Length = %d\n", opts->nVoxels);
+    printf("Number of CPU Threads = %d\n", opts->nThreads);
+    printf("Output Name = %s\n", opts->outputFilename);
+
+    if (opts->Tau)
+    {
+        printf("--------------------------------\n");
+        printf("Tortuosity Simulation Enabled\n");
+        printf("GPU Flag = %d\n", opts->useGPU);
+        if(opts->useGPU)
+            printf("GPUs Requested = %d\n", opts->nGPU);
+        
+        if(opts->PB)
+            printf("BC: Periodic\n");
+        else
+            printf("BC: No Flux");
+
+        printf("Solver Options:\n");
+        printf("SOR Jacobi Method\n");      // only option avaialable right now
+        printf("Maximum Iterations = %ld\n", opts->MAX_ITER);
+        printf("Convergence Type: Percent Change\n");   // also only options available
+        printf("Convergence Cutoff = %1.3e\n", opts->ConvergeCriteria);
+    }
+
+    if(opts->poreSD)
+    {
+        printf("--------------------------------\n");
+        printf("Pore-Size Distribution Enabled\n");
+        printf("Output Pore-Size Distribution: %s\n", opts->poreSDOut);
+        printf("Cutoff Radius = %d\n", opts->maxR);
+    }
+
+    if(opts->partSD)
+    {
+        printf("--------------------------------\n");
+        printf("Particle-Size Distribution Enabled\n");
+        printf("Output Particle-Size Distribution: %s\n", opts->partSDOut);
+        printf("Cutoff Radius = %d\n", opts->maxR);
+    }
+
+   return;
 }
 
 
@@ -86,6 +153,8 @@ void readInputGeneral(char *filename, options *opts)
     double tempD;
     char tempFilenames[1000];
     std::ifstream InputFile(filename);
+
+    optionsInit(opts);
 
     // read options
 
@@ -151,6 +220,15 @@ void readInputGeneral(char *filename, options *opts)
             sscanf(myText.c_str(), "%s %s", tempC, tempFilenames);
             strcpy(opts->poreSDOut, tempFilenames);
         }
+        else if (strcmp(tempC, "useGPU:") == 0)
+        {
+            opts->useGPU = (int) tempD;
+        }
+        else if (strcmp(tempC, "numGPU:") == 0)
+        {
+            opts->nGPU = (int) tempD;
+        }
+
     }
 
     return;

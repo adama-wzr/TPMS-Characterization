@@ -1,7 +1,7 @@
 OutputName: SchwarzP_mesh.csv
 isoValue: 0.3
 nVoxels: 100
-TPMS: 1
+TPMS: 3
 Verbose: 1
 Tau: 1
 pb: 1

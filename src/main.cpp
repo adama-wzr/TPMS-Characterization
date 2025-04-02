@@ -37,7 +37,10 @@ int main(int argc, char **argv)
 
     TPMS_Init(P, &opts, &mesh);
 
+    printf("Function Initialized Properly\n");
+    printf("VF = %1.3e\n", mesh.VF);
 
-    
+
+
     return 0;
 }

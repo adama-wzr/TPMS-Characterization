@@ -2,10 +2,12 @@
 
 User Input-parsing
 
-Last modified 04/01/2025
+Last modified 04/02/2025
 Andre Adam
-
 */
+
+#ifndef _INPUT
+#define _INPUT
 
 #include <string.h>
 #include <stdbool.h>
@@ -29,6 +31,10 @@ void optionsInit(options *opts)
         optionsInit:
         Inputs:
             - pointer to options struct
+        Outputs:
+            - None
+        Function simply initializes values and allocates space for 
+        struct variables.
     */
 
     // Initialize all flags to false
@@ -265,3 +271,5 @@ void readInputGeneral(char *filename, options *opts)
     }
     return;
 }
+
+#endif

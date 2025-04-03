@@ -13,6 +13,7 @@ Andre Adam
 #include <lib/surfaceArea.hpp>
 #include <lib/TauSim.hpp>
 #include <lib/sizeDistributions.hpp>
+#include <lib/output.hpp>
 #include <math.h>
 
 
@@ -73,6 +74,8 @@ int main(int argc, char **argv)
         poreSD_3D(&opts, &mesh, &save, P, 0);
     else
         save.pore50 = 0;
+
+    outputGeneral(&opts, &save);
 
     return 0;
 }

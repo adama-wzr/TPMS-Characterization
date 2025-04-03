@@ -9,7 +9,7 @@ The versions are often soft requirements, meaning they are the only versions we 
 - CUDA >= 11.5 (tested all the way up to 12.8)
 - gcc >= 11.0
 - C++17 or newer
-- CMAKE 3.0 or newer
+- CMAKE 3.8 or newer
 - OpenMP (any recent version is fine)
 
 # Compilation

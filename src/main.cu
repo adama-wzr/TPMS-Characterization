@@ -1,80 +1,80 @@
-#include "helper.cuh"
+/*
+
+Main file will handle program execution.
+
+Last modified 04/03/2025
+Andre Adam
+*/
+
+#include <lib/TPMS_definitions.hpp>
+#include <lib/data_structures.hpp>
+#include <lib/usrInput.hpp>
+#include <lib/TPMS_helpers.hpp>
+#include <lib/surfaceArea.hpp>
+#include <lib/TauSim.hpp>
+#include <lib/sizeDistributions.hpp>
+#include <lib/output.hpp>
+#include <math.h>
+
 
 int main(int argc, char **argv)
 {
-    // Print efficiency for Linux
-    fflush(stdout);
-
-    // Define the data structures
+    // Declare data structure with general user options
     options opts;
-    meshInfo info;
+    meshInfo mesh;
     saveInfo save;
-    // Read filename
-    char inputFilename[50];
+
+    // Other useful flags
+
+    bool errorFlag = 0;
+
+    // Read user input
+
+    char inputFilename[40];
 
     sprintf(inputFilename, "input.txt");
 
     readInputGeneral(inputFilename, &opts);
-    
+
     if (opts.verbose)
-        printOpts(&opts);
+        printOptsGeneral(&opts);
 
-    // Input file read, fill data strcture
-    info.numCellsX = opts.nVoxels;
-    info.numCellsY = opts.nVoxels;
-    info.numCellsZ = opts.nVoxels;
-    info.nElements = opts.nVoxels * opts.nVoxels * opts.nVoxels;
+    // Error Check Inputs
 
-    save.nElements = info.nElements;
-    save.nVoxel = opts.nVoxels;
 
-    // Open space to hold the structure and initialize it to zeroes
-    char *P = (char *)malloc(sizeof(char) * info.nElements);
-    memset(P, 0, sizeof(char) * info.nElements);
 
-    // Generate structure according to user input
-    int genStructFlag = 0;
-    genStructFlag = genStruct(&opts, &info, P);
+    // Create TPMS
 
-    if (genStructFlag == 1)
-    {
-        printf("Error with TPMS type selected. Exiting now.\n");
+    char *P;
+
+    TPMS_Init(&P, &opts, &mesh);
+
+    // Calculate Surface Area, if applicable
+    if (opts.runSA)
+        SA(P, &mesh, &save);
+    
+    
+    // calculate Tortuosity, if applicable
+
+    if (opts.Tau)
+        errorFlag = TauSim3D(&opts, &mesh, &save, P);
+
+    
+    if(errorFlag)
         return 1;
-    }
 
-    // Copy VF
-
-    save.porosity = 1.0 - info.VF;
-    
-    // Run surface area
-    
-    SA(P, &info, &save);
-    
-    // save SA
-
-    // outSA(&opts, &save);
-
-    // tau Sim
-
-    if (opts.Tau == 1)
-    {
-        TauSim3D(&opts, &info, &save, P);
-    }
-
-    // Pore and Particle size distributions
+    // Calculate size distributions
 
     if(opts.partSD)
-        partSD_3D(&opts, &info, &save, P, 1);
+        partSD_3D(&opts, &mesh, &save, P, 1);
     else
         save.part50 = 0;
     
     if (opts.poreSD)
-        poreSD_3D(&opts, &info, &save, P, 0);
+        poreSD_3D(&opts, &mesh, &save, P, 0);
     else
         save.pore50 = 0;
 
-    // Save the output
-    
     outputGeneral(&opts, &save);
 
     return 0;

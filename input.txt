@@ -1,7 +1,7 @@
 OutputName: SchwarzP_mesh.csv
 isoValue: 0.3
 nVoxels: 100
-TPMS: 1
+TPMS: 3
 Verbose: 1
 Tau: 1
 pb: 1
@@ -12,3 +12,6 @@ poreSD: 1
 poreSDOut: poreSD.csv
 partSDOut: partSD.csv
 nThreads: 8
+useGPU: 1
+numGPU: 1
+runSA: 1

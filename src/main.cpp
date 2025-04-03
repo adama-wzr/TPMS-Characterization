@@ -10,6 +10,7 @@ Andre Adam
 #include <lib/data_structures.hpp>
 #include <lib/usrInput.hpp>
 #include <lib/TPMS_helpers.hpp>
+#include <lib/surfaceArea.hpp>
 #include <math.h>
 
 
@@ -31,14 +32,21 @@ int main(int argc, char **argv)
     if (opts.verbose)
         printOptsGeneral(&opts);
 
+    // Error Check Inputs
+
+    
+
     // Create TPMS
 
     char *P;
 
     TPMS_Init(&P, &opts, &mesh);
 
-    printf("Function Initialized Properly\n");
-    printf("VF = %1.3e\n", mesh.VF);
+    // Calculate Surface Area, if applicable
+    if (opts.runSA)
+        SA(P, &mesh, &save);
+    
+    printf("Surface Area = %1.3e\n", save.SA);
 
 
 

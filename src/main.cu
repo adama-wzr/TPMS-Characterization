@@ -12,6 +12,7 @@ Andre Adam
 #include <lib/TPMS_helpers.hpp>
 #include <lib/surfaceArea.hpp>
 #include <lib/TauSim.hpp>
+#include <lib/sizeDistributions.hpp>
 #include <math.h>
 
 
@@ -60,9 +61,18 @@ int main(int argc, char **argv)
     
     if(errorFlag)
         return 1;
-        
 
+    // Calculate size distributions
 
+    if(opts.partSD)
+        partSD_3D(&opts, &mesh, &save, P, 1);
+    else
+        save.part50 = 0;
+    
+    if (opts.poreSD)
+        poreSD_3D(&opts, &mesh, &save, P, 0);
+    else
+        save.pore50 = 0;
 
     return 0;
 }

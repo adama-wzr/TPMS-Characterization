@@ -10,6 +10,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/lib"
     "${PROJECT_SOURCE_DIR}/tests"
+    "${PROJECT_SOURCE_DIR}/src_cuda"
 )
 
 # Different methods are neede for Linux based systems and Windows
@@ -28,7 +29,7 @@ endif (UNIX)
 # Set Project Sources ----------------------------------------
 
 set(PROJECT_SOURCES
-    src/main.cpp
+    src/main.cu
     # src/helper.cuh
 )
 
@@ -40,9 +41,11 @@ add_executable(
 )
 
 # Compilation options to ensure this works with CUDA + OpenMP
-
+set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
+# set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 target_compile_features(TPMS-Characterization PUBLIC cxx_std_23)
+
 # target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
 
 if (UNIX)

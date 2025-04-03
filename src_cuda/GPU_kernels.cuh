@@ -13,6 +13,7 @@ Andre Adam.
 
 #include "cuda_runtime.h"
 #include "cuda.h"
+#include "device_launch_parameters.h"
 #include <data_structures.hpp>
 
 // CUDA CHECK ERROR
@@ -200,84 +201,5 @@ __global__ void JI_SOR3D_kernelPB(
         xNew[myIdx] = (1.0 - w) * x[myIdx] + w / A[myIdx * 7 + 0] * (b[myIdx] - sigma);
     }
 }
-
-
-/*
-
-    GPU Memory Handling:
-
-*/
-
-int initGPU_3DSOR(float **d_Coeff,
-                  float **d_RHS,
-                  float **d_Conc,
-                  float **d_ConcTemp,
-                  meshInfo *mesh)
-{
-    /*
-        Function initGPU_3DSOR:
-        Inputs:
-            - float pointer to d_Coeff, storing coeff matrix in GPU
-            - float pointer to d_RHS, storing RHS vector in GPU
-            - float pointer to d_Conc, the concentration array in GPU memory
-            - float pointer to d_ConcTemp, where the concentration array will
-                be modified in GPU memory
-            - pointer to meshInfo, holding general information about the mesh.
-        Outputs:
-            - None.
-
-        The function will allocate the sufficient space for the arrays needed for
-        the Standard Over-Relaxed Jacobi Method. It also initializes the arrays.
-        Error calls are returned if it fails.
-    */
-
-    // Set device
-
-    CHECK_CUDA(cudaSetDevice(0));
-
-    // Allocate space
-
-    CHECK_CUDA(cudaMalloc((void **)&(*d_Coeff), mesh->nElements * sizeof(float) * 7));
-    CHECK_CUDA(cudaMalloc((void **)&(*d_RHS), mesh->nElements * sizeof(float)));
-    CHECK_CUDA(cudaMalloc((void **)&(*d_Conc), mesh->nElements * sizeof(float)));
-    CHECK_CUDA(cudaMalloc((void **)&(*d_ConcTemp), mesh->nElements * sizeof(float)));
-
-    // Set buffers
-
-    CHECK_CUDA(cudaMemset((*d_Coeff), 0, mesh->nElements * sizeof(float) * 7));
-    CHECK_CUDA(cudaMemset((*d_RHS), 0, mesh->nElements * sizeof(float)));
-    CHECK_CUDA(cudaMemset((*d_Conc), 0, mesh->nElements * sizeof(float)));
-    CHECK_CUDA(cudaMemset((*d_ConcTemp), 0, mesh->nElements * sizeof(float)));
-
-    return 0;
-}
-
-int unInitGPU_SOR(float **d_Coeff,
-                  float **d_RHS,
-                  float **d_Conc,
-                  float **d_ConcTemp)
-{
-    /*
-        Function unInitGPU_SOR:
-        Inputs:
-            - float pointer to d_Coeff, storing coeff matrix in GPU
-            - float pointer to d_RHS, storing RHS vector in GPU
-            - float pointer to d_Conc, the concentration array in GPU memory
-            - float pointer to d_ConcTemp, where the concentration array will
-                be modified in GPU memory
-        Outputs:
-            - None.
-
-        The function will free space in device memory.
-    */
-
-    CHECK_CUDA(cudaFree((*d_Coeff)));
-    CHECK_CUDA(cudaFree((*d_RHS)));
-    CHECK_CUDA(cudaFree((*d_Conc)));
-    CHECK_CUDA(cudaFree((*d_ConcTemp)));
-
-    return 0;
-}
-
 
 #endif

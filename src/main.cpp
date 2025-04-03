@@ -2,7 +2,7 @@
 
 Main file will handle program execution.
 
-Last modified 04/01/2025
+Last modified 04/02/2025
 Andre Adam
 */
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
     char *P;
 
-    TPMS_Init(P, &opts, &mesh);
+    TPMS_Init(&P, &opts, &mesh);
 
     printf("Function Initialized Properly\n");
     printf("VF = %1.3e\n", mesh.VF);

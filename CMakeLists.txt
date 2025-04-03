@@ -9,6 +9,7 @@ include_directories(
     TPMS-Characterization PUBLIC
     "${PROJECT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/lib"
+    "${PROJECT_SOURCE_DIR}/tests"
 )
 
 # Different methods are neede for Linux based systems and Windows
@@ -50,3 +51,15 @@ if (UNIX)
 
     target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
 endif (UNIX)
+
+# Set Tests Executables -------------------------------------
+
+set(TEST_SOURCES
+    tests/saveTPMS.cpp
+)
+
+add_executable(
+    saveTPMS
+    ${TEST_SOURCES}
+)
+

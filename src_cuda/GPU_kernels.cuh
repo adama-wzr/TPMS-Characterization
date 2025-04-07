@@ -34,13 +34,13 @@ Andre Adam.
 // 3D GPU SOR
 
 __global__ void JI_SOR3D_kernel(
-    float       *A,
-    float       *x,
-    float       *b,
-    float       *xNew,
-    long int    nElements,
-    int         nCols,
-    int         nRows)
+    float *A,
+    float *x,
+    float *b,
+    float *xNew,
+    long int nElements,
+    int nCols,
+    int nRows)
 {
     /*
 
@@ -55,7 +55,7 @@ __global__ void JI_SOR3D_kernel(
             - int nRows, passed by value
         Outputs:
             - none.
-        
+
         The function calculates the standard over-relaxed Jacobi Iteration
         for a coefficient matrix with 7 main diagonals. For indexing reference,
         check the discretization function.

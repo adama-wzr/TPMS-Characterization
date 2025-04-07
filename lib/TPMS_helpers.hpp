@@ -12,6 +12,7 @@ Andre Adam
 
 #include <stdlib.h>
 #include <math.h>
+#include <cstring>
 
 #include <lib/constants.hpp>
 #include <lib/data_structures.hpp>

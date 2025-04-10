@@ -51,6 +51,8 @@ int main(int argc, char **argv)
 
     TPMS_Init(&P, &opts, &mesh);
 
+    printf("VF = %lf\n", mesh.VF);
+
     // Update the save array
     save.porosity = 1.0 - mesh.VF;
 

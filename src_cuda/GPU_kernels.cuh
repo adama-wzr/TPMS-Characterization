@@ -212,7 +212,8 @@ __global__ void JI_SOR3D_PB_multi(
     long int offset,
     int nCols,
     int nRows,
-    int nSlices)
+    int nSlices,
+    int nData)
 {
     /*
 
@@ -242,12 +243,12 @@ __global__ void JI_SOR3D_PB_multi(
     int myCol = realIdx - mySlice * nRows * nCols - myRow * nCols;
     float w = 2.0 / 3.0;
 
-    if (myIdx < nElements)
+    if (myIdx < nData && realIdx < nElements)
     {
         float sigma = 0;
         for (int j = 1; j < 7; j++)
         {
-            if (A[myIdx * 7 + j] > 1e-15)
+            if (A[myIdx * 7 + j] != 0)
             {
                 if (j == 1)
                 {
@@ -308,6 +309,8 @@ __global__ void JI_SOR3D_PB_multi(
     }
 }
 
-
+__global__ void cuda_hello(int GPU_id){
+    printf("Hello World from GPU %d!\n", GPU_id);
+}
 
 #endif

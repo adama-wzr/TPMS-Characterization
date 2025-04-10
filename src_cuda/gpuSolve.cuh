@@ -208,21 +208,21 @@ int JI3D_SOR_multi(float *Coeff,
                    int nDevices)
 {
     /*
-    Function JI3D_SOR_multi:
-    Inputs:
-       - pointer to coefficient matrix array
-       - pointer to RHS matrix array
-       - pointer to Concentration distribution array
-       - pointer to GPU solver struct
-       - pointer to options struct
-       - pointer to mesh struct
-       - number of GPUs
-    Outputs:
-       - None
+        Function JI3D_SOR_multi:
+        Inputs:
+        - pointer to coefficient matrix array
+        - pointer to RHS matrix array
+        - pointer to Concentration distribution array
+        - pointer to GPU solver struct
+        - pointer to options struct
+        - pointer to mesh struct
+        - number of GPUs
+        Outputs:
+        - None
 
-    This function will manage the host-device interactions for the Jacobi Iteration method
-    in 3D, with a standard over-relaxation applied. The function will manage data transfers,
-    convergence criteria, and kernel coordination.
+        This function will manage the host-device interactions for the Jacobi Iteration method
+        in 3D, with a standard over-relaxation applied. The function will manage data transfers,
+        convergence criteria, and kernel coordination.
     */
 
     long int iterCount = 0;
@@ -232,6 +232,12 @@ int JI3D_SOR_multi(float *Coeff,
     for(int i = 0; i < nDevices; i++)
     {
         gpu[i].nBlocks = gpu[i].dataN / threads_per_block + 1;
+    }
+
+    for(int i = 0; i < nDevices; i++)
+    {
+        CHECK_CUDA(cudaSetDevice(i));
+        cuda_hello<<<1,1,0,gpu[i].stream>>>(i);
     }
 
     float pctChange = 1;
@@ -284,7 +290,7 @@ int JI3D_SOR_multi(float *Coeff,
                 JI_SOR3D_PB_multi<<<gpu[i].nBlocks, threads_per_block, 0, gpu[i].stream>>>(
                     gpu[i].d_Coeff, gpu[i].d_X, gpu[i].d_RHS, gpu[i].d_Temp,
                     mesh->nElements, gpu[i].xOffset, mesh->numCellsX, mesh->numCellsY,
-                    mesh->numCellsZ
+                    mesh->numCellsZ, gpu[i].dataN
                 );
             }
         }
@@ -305,7 +311,6 @@ int JI3D_SOR_multi(float *Coeff,
                 CHECK_CUDA(cudaSetDevice(i));
 
                 // Copy data asynchronously
-
                 CHECK_CUDA(cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost, gpu[i].stream));
 
                 // Wait for all processes to finish
@@ -338,12 +343,19 @@ int JI3D_SOR_multi(float *Coeff,
 
         for(int i = 0; i < nDevices; i++)
         {
+            CHECK_CUDA(cudaSetDevice(i));
+            // Copy updated x-vec to host
+            CHECK_CUDA(
+                cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float)*gpu[i].dataN, cudaMemcpyDeviceToHost, gpu[i].stream)
+            );
             // Wait for all processes to finish
             cudaStreamSynchronize(gpu[i].stream);
-            // copy d_X = d_Temp
+            // copy d_X = d_Conc
             CHECK_CUDA(
-                cudaMemcpyAsync(gpu[i].d_X + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float)*gpu[i].dataN, cudaMemcpyDeviceToDevice, gpu[i].stream)
+                cudaMemcpyAsync(gpu[i].d_X, Concentration, sizeof(float)*mesh->nElements, cudaMemcpyHostToDevice, gpu[i].stream)
             );
+            // Wait for all processes to finish
+            cudaStreamSynchronize(gpu[i].stream);
         }
 
         // increment
@@ -354,6 +366,7 @@ int JI3D_SOR_multi(float *Coeff,
 
     for(int i = 0; i<nDevices; i++)
     {
+        CHECK_CUDA(cudaSetDevice(i));
         // Wait for all processes to finish
         cudaStreamSynchronize(gpu[i].stream);
         // copy result to host
@@ -453,7 +466,7 @@ int gpuHandler(options *opts,
         Currently only support one GPU, so that's a little useless
     */
 
-    if (nDevices == 1) // single device execution
+    if (nDevices == 10) // single device execution
     {
         // pointers to GPU arrays
 
@@ -474,8 +487,10 @@ int gpuHandler(options *opts,
         // un-initialize
         unInitGPU_SOR(&d_Coeff, &d_RHS, &d_Conc, &d_ConcTemp);
     }
-    else if (nDevices > 1)
+    else
     {
+        if (opts->verbose)
+            printf("MUlti-GPU Solve: %d Devices Detected\n", nDevices);
         // Multi-GPU Execution
         // MGPU_Solve gpu[MAX_GPU];
         MGPU_Solve *gpu = (MGPU_Solve *)malloc(sizeof(MGPU_Solve) * nDevices);
@@ -484,6 +499,8 @@ int gpuHandler(options *opts,
         for (int i = 0; i < nDevices; i++)
         {
             gpu[i].dataN = mesh->nElements / nDevices;
+            if(opts->verbose)
+                printf("GPU ID = %d, dataN = %ld\n", i, gpu[i].dataN);
         }
 
         // take into account "odd" data sizes

@@ -234,16 +234,10 @@ int JI3D_SOR_multi(float *Coeff,
         gpu[i].nBlocks = gpu[i].dataN / threads_per_block + 1;
     }
 
-    for(int i = 0; i < nDevices; i++)
-    {
-        CHECK_CUDA(cudaSetDevice(i));
-        cuda_hello<<<1,1,0,gpu[i].stream>>>(i);
-    }
-
     float pctChange = 1;
     int iterToCheck = 1000;
 
-    // copy arrays into GPU (async)
+    // copy arrays into GPU (sync)
 
     for (int i = 0; i < nDevices; i++)
     {
@@ -252,20 +246,20 @@ int JI3D_SOR_multi(float *Coeff,
 
         // Copy arrays asynchronously
         CHECK_CUDA(
-            cudaMemcpyAsync(gpu[i].d_Coeff, Coeff + gpu[i].xOffset, gpu[i].dataN * 7 * sizeof(float), 
-                            cudaMemcpyHostToDevice, gpu[i].stream)
+            cudaMemcpy(gpu[i].d_Coeff, Coeff + gpu[i].xOffset*7, gpu[i].dataN * 7 * sizeof(float), 
+                            cudaMemcpyHostToDevice)
         );
         CHECK_CUDA(
-            cudaMemcpyAsync(gpu[i].d_RHS, RHS + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
-                            cudaMemcpyHostToDevice, gpu[i].stream)
+            cudaMemcpy(gpu[i].d_RHS, RHS + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
+                            cudaMemcpyHostToDevice)
         );
         CHECK_CUDA(
-            cudaMemcpyAsync(gpu[i].d_Temp, Concentration + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
-                            cudaMemcpyHostToDevice, gpu[i].stream)
+            cudaMemcpy(gpu[i].d_Temp, Concentration + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
+                            cudaMemcpyHostToDevice)
         );
         CHECK_CUDA(
-            cudaMemcpyAsync(gpu[i].d_X, Concentration, mesh->nElements * sizeof(float), 
-                            cudaMemcpyHostToDevice, gpu[i].stream)
+            cudaMemcpy(gpu[i].d_X, Concentration, mesh->nElements * sizeof(float), 
+                            cudaMemcpyHostToDevice)
         );
     }
 
@@ -310,11 +304,11 @@ int JI3D_SOR_multi(float *Coeff,
                 // set device
                 CHECK_CUDA(cudaSetDevice(i));
 
-                // Copy data asynchronously
-                CHECK_CUDA(cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost, gpu[i].stream));
-
                 // Wait for all processes to finish
                 cudaStreamSynchronize(gpu[i].stream);
+
+                // Copy data asynchronously
+                CHECK_CUDA(cudaMemcpy(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost));
             }
             // compare
             float sum = 0;
@@ -341,21 +335,30 @@ int JI3D_SOR_multi(float *Coeff,
 
         // update d_Conc = d_ConcTemp
 
-        for(int i = 0; i < nDevices; i++)
+        for (int i = 0; i < nDevices; i++)
         {
+            // Set device
             CHECK_CUDA(cudaSetDevice(i));
-            // Copy updated x-vec to host
-            CHECK_CUDA(
-                cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float)*gpu[i].dataN, cudaMemcpyDeviceToHost, gpu[i].stream)
-            );
-            // Wait for all processes to finish
+            // make sure all streams have finished
             cudaStreamSynchronize(gpu[i].stream);
-            // copy d_X = d_Conc
+            // copy necessary data
             CHECK_CUDA(
-                cudaMemcpyAsync(gpu[i].d_X, Concentration, sizeof(float)*mesh->nElements, cudaMemcpyHostToDevice, gpu[i].stream)
+                cudaMemcpy(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost)
             );
-            // Wait for all processes to finish
+        }
+
+        // copy of Concentration to device
+
+        for (int i = 0; i < nDevices; i++)
+        {
+            // Set device
+            CHECK_CUDA(cudaSetDevice(i));
+            // make sure all streams have finished
             cudaStreamSynchronize(gpu[i].stream);
+            // copy necessary data
+            CHECK_CUDA(
+                cudaMemcpy(gpu[i].d_X, Concentration, sizeof(float)*mesh->nElements, cudaMemcpyHostToDevice)
+            );
         }
 
         // increment
@@ -371,7 +374,7 @@ int JI3D_SOR_multi(float *Coeff,
         cudaStreamSynchronize(gpu[i].stream);
         // copy result to host
         CHECK_CUDA(
-            cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float)*gpu[i].dataN, cudaMemcpyDeviceToHost, gpu[i].stream)
+            cudaMemcpy(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float)*gpu[i].dataN, cudaMemcpyDeviceToHost)
         );
     }
 
@@ -386,6 +389,9 @@ int JI3D_SOR_multi(float *Coeff,
 
     mesh->conv = pctChange;
     mesh->iterCount = iterCount;
+
+    // Memory management
+    free(TempConc);
 
     return 0;
 }
@@ -466,7 +472,7 @@ int gpuHandler(options *opts,
         Currently only support one GPU, so that's a little useless
     */
 
-    if (nDevices == 10) // single device execution
+    if (nDevices == 1) // single device execution
     {
         // pointers to GPU arrays
 
@@ -494,14 +500,6 @@ int gpuHandler(options *opts,
         // Multi-GPU Execution
         // MGPU_Solve gpu[MAX_GPU];
         MGPU_Solve *gpu = (MGPU_Solve *)malloc(sizeof(MGPU_Solve) * nDevices);
-
-        // get data sizes for each GPU
-        for (int i = 0; i < nDevices; i++)
-        {
-            gpu[i].dataN = mesh->nElements / nDevices;
-            if(opts->verbose)
-                printf("GPU ID = %d, dataN = %ld\n", i, gpu[i].dataN);
-        }
 
         // take into account "odd" data sizes
         for (int i = 0; i < mesh->nElements % nDevices; i++)
@@ -547,8 +545,28 @@ int gpuHandler(options *opts,
 
         JI3D_SOR_multi(CoeffMatrix, RHS, Concentration, gpu, opts, mesh, nDevices);
 
-        // Free?
+        // GPU Memory Management
 
+        for (int i = 0; i < nDevices; i++)
+        {
+            // Set device
+            CHECK_CUDA(cudaSetDevice(i));
+            // free gpu array pointers
+            CHECK_CUDA(
+                cudaFree(gpu[i].d_Coeff));
+            CHECK_CUDA(
+                cudaFree(gpu[i].d_RHS));
+            CHECK_CUDA(
+                cudaFree(gpu[i].d_X));
+            CHECK_CUDA(
+                cudaFree(gpu[i].d_Temp));
+            // Stream Destroy
+            CHECK_CUDA(
+                cudaStreamDestroy(gpu[i].stream));
+        }
+
+        // Free the cuda struct
+        free(gpu);
     }
 
     return 0;

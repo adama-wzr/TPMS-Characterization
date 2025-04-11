@@ -296,7 +296,7 @@ __global__ void JI_SOR3D_PB_multi(
                 {
                     if (mySlice == 0)
                     {
-                        // Periodic Back
+                        // Periodic Front
                         sigma += A[myIdx * 7 + j] * x[(nSlices - 1) * nRows * nCols + myRow * nCols + myCol];
                     } else
                     {
@@ -311,6 +311,16 @@ __global__ void JI_SOR3D_PB_multi(
 
 __global__ void cuda_hello(int GPU_id){
     printf("Hello World from GPU %d!\n", GPU_id);
+}
+
+__global__ void checkNaN(float *arr, int arrLength)
+{
+    int myIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(myIdx < arrLength)
+    {
+        if(arr[myIdx] != arr[myIdx])
+            printf("Found NaN at %d\n", myIdx);
+    }
 }
 
 #endif

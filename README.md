@@ -21,12 +21,12 @@ Instructions for how to build the code:
 - Download all the files from this repository. 
 - Create a new folder named "build".
 - Enter the new folder.
-- Use the following command: `cmake ..`
+- Run cmake from inside the build folder: `cmake ..`
 - If all requirements are met, then the command above should be successful
 - Run `cmake --build . --config Release`
 - Windows:
-    - This will create a folder "Release" inside of the "build" folder for Windows.
-    - Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found (Windows).
+    - This will create a folder "Release" inside of the "build" folder.
+    - Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found.
 - Linux:
     - The executables will be made directly in the build folder, there is not a "Release" folder.
 
@@ -39,3 +39,7 @@ This work wouldn't be possible without the computational time awarded as part of
 This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 from the Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support (ACCESS) program, which is supported by National Science Foundation grants #2138259, #2138286, #2138307, #2137603, and #2138296.
 
 # Upcoming Changes
+
+- multi-GPU asynchronous operation.
+- More test functions.
+- Better separation to ensure operation in computers without CUDA.

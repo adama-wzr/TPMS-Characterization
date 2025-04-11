@@ -246,20 +246,20 @@ int JI3D_SOR_multi(float *Coeff,
 
         // Copy arrays asynchronously
         CHECK_CUDA(
-            cudaMemcpy(gpu[i].d_Coeff, Coeff + gpu[i].xOffset*7, gpu[i].dataN * 7 * sizeof(float), 
-                            cudaMemcpyHostToDevice)
+            cudaMemcpyAsync(gpu[i].d_Coeff, Coeff + gpu[i].xOffset*7, gpu[i].dataN * 7 * sizeof(float), 
+                            cudaMemcpyHostToDevice, gpu[i].stream)
         );
         CHECK_CUDA(
-            cudaMemcpy(gpu[i].d_RHS, RHS + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
-                            cudaMemcpyHostToDevice)
+            cudaMemcpyAsync(gpu[i].d_RHS, RHS + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
+                            cudaMemcpyHostToDevice, gpu[i].stream)
         );
         CHECK_CUDA(
-            cudaMemcpy(gpu[i].d_Temp, Concentration + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
-                            cudaMemcpyHostToDevice)
+            cudaMemcpyAsync(gpu[i].d_Temp, Concentration + gpu[i].xOffset, gpu[i].dataN * sizeof(float), 
+                            cudaMemcpyHostToDevice, gpu[i].stream)
         );
         CHECK_CUDA(
-            cudaMemcpy(gpu[i].d_X, Concentration, mesh->nElements * sizeof(float), 
-                            cudaMemcpyHostToDevice)
+            cudaMemcpyAsync(gpu[i].d_X, Concentration, mesh->nElements * sizeof(float), 
+                            cudaMemcpyHostToDevice, gpu[i].stream)
         );
     }
 
@@ -280,6 +280,8 @@ int JI3D_SOR_multi(float *Coeff,
             {
                 // set device
                 CHECK_CUDA(cudaSetDevice(i));
+                // make sure all streams have finished
+                cudaStreamSynchronize(gpu[i].stream);
                 // launch kernel async
                 JI_SOR3D_PB_multi<<<gpu[i].nBlocks, threads_per_block, 0, gpu[i].stream>>>(
                     gpu[i].d_Coeff, gpu[i].d_X, gpu[i].d_RHS, gpu[i].d_Temp,
@@ -304,15 +306,18 @@ int JI3D_SOR_multi(float *Coeff,
                 // set device
                 CHECK_CUDA(cudaSetDevice(i));
 
-                // Wait for all processes to finish
-                cudaStreamSynchronize(gpu[i].stream);
-
                 // Copy data asynchronously
-                CHECK_CUDA(cudaMemcpy(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost));
+                CHECK_CUDA(cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost), gpu[i].stream);
             }
             // compare
             float sum = 0;
             long int count = 0;
+
+            for(int i = 0; i < nDevices; i++)
+            {
+                // Wait for all processes to finish
+                cudaStreamSynchronize(gpu[i].stream);
+            }
 
             for (int i = 0; i < mesh->nElements; i++)
             {
@@ -343,7 +348,7 @@ int JI3D_SOR_multi(float *Coeff,
             cudaStreamSynchronize(gpu[i].stream);
             // copy necessary data
             CHECK_CUDA(
-                cudaMemcpy(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost)
+                cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost, gpu[i].stream)
             );
         }
 
@@ -357,7 +362,7 @@ int JI3D_SOR_multi(float *Coeff,
             cudaStreamSynchronize(gpu[i].stream);
             // copy necessary data
             CHECK_CUDA(
-                cudaMemcpy(gpu[i].d_X, Concentration, sizeof(float)*mesh->nElements, cudaMemcpyHostToDevice)
+                cudaMemcpyAsync(gpu[i].d_X, Concentration, sizeof(float)*mesh->nElements, cudaMemcpyHostToDevice, gpu[i].stream)
             );
         }
 
@@ -498,7 +503,6 @@ int gpuHandler(options *opts,
         if (opts->verbose)
             printf("MUlti-GPU Solve: %d Devices Detected\n", nDevices);
         // Multi-GPU Execution
-        // MGPU_Solve gpu[MAX_GPU];
         MGPU_Solve *gpu = (MGPU_Solve *)malloc(sizeof(MGPU_Solve) * nDevices);
 
         // take into account "odd" data sizes
@@ -541,9 +545,28 @@ int gpuHandler(options *opts,
                 cudaMalloc((void **)&gpu[i].d_X, mesh->nElements * sizeof(float)));
         }
 
+        // Allocate page-locked memory
+
+        float *h_Coeff, *h_RHS, *h_Conc;
+
+        CHECK_CUDA(
+            cudaMallocHost((void **)&h_Coeff, mesh->nElements * 7 * sizeof(float))
+        );
+        CHECK_CUDA(
+            cudaMallocHost((void **)&h_RHS, mesh->nElements * sizeof(float))
+        );
+        CHECK_CUDA(
+            cudaMallocHost((void **)&h_Conc, mesh->nElements * sizeof(float))
+        );
+        
+        // Copy arrays to page-locked memory
+        memcpy(h_Coeff, CoeffMatrix, sizeof(float) * mesh->nElements * 7);
+        memcpy(h_RHS, RHS, sizeof(float) * mesh->nElements);
+        memcpy(h_Conc, Concentration, sizeof(float) * mesh->nElements);
+
         // Call Solver
 
-        JI3D_SOR_multi(CoeffMatrix, RHS, Concentration, gpu, opts, mesh, nDevices);
+        JI3D_SOR_multi(h_Coeff, h_RHS, h_Conc, gpu, opts, mesh, nDevices);
 
         // GPU Memory Management
 

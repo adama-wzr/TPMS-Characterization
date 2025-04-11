@@ -97,8 +97,7 @@ int main(int argc, char **argv)
         std::cin >> iso;
         if (iso > TPMS_Crit[input - 1])
         {
-            printf("Isovalue entered %2.1f is larger than crit value %2.1f. \\
-            Please try again.\n", iso, TPMS_Crit[input - 1]);
+            printf("Isovalue entered %2.1f is larger than crit value %2.1f. Please try again.\n", iso, TPMS_Crit[input - 1]);
         }
         else
         {
@@ -111,8 +110,7 @@ int main(int argc, char **argv)
     {
         printf("********************\n\n");
         printf("*     WARNING!     *\n");
-        printf("Isovalue entered %2.1f is greater than the pinch \\
-        value %2.1f.\n", iso, TPMS_Pinch[input - 1]);
+        printf("Isovalue entered %2.1f is greater than the pinch value %2.1f.\n", iso, TPMS_Pinch[input - 1]);
         printf("********************\n\n");
     }
     

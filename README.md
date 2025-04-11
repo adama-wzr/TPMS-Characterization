@@ -14,33 +14,23 @@ The versions are often soft requirements, meaning they are the only versions we 
 
 # Compilation
 
-On Ubuntu, assuming CUDA is installed and in the $PATH, the compilation should be simple:
+On Windows, to avoid issues, just have cmake and all other requirements installed. Use Visual Studio (the IDE, not VS Code) to build the project for you. In some cases, permission issues might arise when compiling directly on the PowerShell.
 
-```bash
-nvcc -Xcompiler -fopenmp ./main.cu
-```
-Will produce your executable `a.out`. Electively use the flag `-o anyName` to give a name for the executable.
-
-On Windows, it some more flags might be necessary to control execution. The main issues are with different C++ versions (or not having a default) and sometimes the NVIDIA compiler has trouble identifying the architecture of the GPU. To compile on Windows, use the following command:
-
-```bash
-nvcc -Xcompiler -openmp -std=c++17 -arch=sm_XX .\main.cu
-```
-
-In the `-arch=sm_XX`, replace the `XX` with your GPU compute capability (check it (here)[https://developer.nvidia.com/cuda-gpus]).
-
-**New Method**: Instructions for how to build the code:
+Instructions for how to build the code:
 
 - Download all the files from this repository. 
 - Create a new folder named "build".
 - Enter the new folder.
-- Use the following command: `cmake ..`
+- Run cmake from inside the build folder: `cmake ..`
 - If all requirements are met, then the command above should be successful
 - Run `cmake --build . --config Release`
-- This will create a folder "Release" inside of the "build" folder.
-- Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found (Windows).
+- Windows:
+    - This will create a folder "Release" inside of the "build" folder.
+    - Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found.
+- Linux:
+    - The executables will be made directly in the build folder, there is not a "Release" folder.
 
-The current CMAKE file does not work on Ubuntu/Rocky (HPC), it fails to link the OpenMP library with the CUDA calls. I have no idea why it works on Windows but not on Linux.
+The CMAKE file is the same for Windows and Linux. It has been tested on Windows 11, Ubuntu (22.04 or more recent), and Rocky Linux (HPC). So far it seems to work everywhere, save a few issues when running on PowerShell.
 
 # Acknowledgements
 
@@ -49,3 +39,7 @@ This work wouldn't be possible without the computational time awarded as part of
 This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 from the Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support (ACCESS) program, which is supported by National Science Foundation grants #2138259, #2138286, #2138307, #2137603, and #2138296.
 
 # Upcoming Changes
+
+- multi-GPU asynchronous operation.
+- More test functions.
+- Better separation to ensure operation in computers without CUDA.

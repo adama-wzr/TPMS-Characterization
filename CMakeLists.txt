@@ -44,7 +44,7 @@ add_executable(
 set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
 # set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-target_compile_features(TPMS-Characterization PUBLIC cxx_std_23)
+target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
 
 # target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
 

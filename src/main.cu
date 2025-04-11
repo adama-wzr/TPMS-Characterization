@@ -41,13 +41,18 @@ int main(int argc, char **argv)
 
     // Error Check Inputs
 
-
+    /*
+        Not yet implemented
+    */
 
     // Create TPMS
 
     char *P;
 
     TPMS_Init(&P, &opts, &mesh);
+
+    // Update the save array
+    save.porosity = 1.0 - mesh.VF;
 
     // Calculate Surface Area, if applicable
     if (opts.runSA)

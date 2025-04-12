@@ -307,7 +307,8 @@ int JI3D_SOR_multi(float *Coeff,
                 CHECK_CUDA(cudaSetDevice(i));
 
                 // Copy data asynchronously
-                CHECK_CUDA(cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost), gpu[i].stream);
+                CHECK_CUDA(
+                    cudaMemcpyAsync(Concentration + gpu[i].xOffset, gpu[i].d_Temp, sizeof(float) * gpu[i].dataN, cudaMemcpyDeviceToHost, gpu[i].stream));
             }
             // compare
             float sum = 0;

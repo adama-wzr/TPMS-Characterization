@@ -40,6 +40,5 @@ This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 
 
 # Upcoming Changes
 
-- multi-GPU asynchronous operation.
 - More test functions.
 - Better separation to ensure operation in computers without CUDA.

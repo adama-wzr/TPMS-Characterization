@@ -246,7 +246,7 @@ int JI3D_SOR_multi(float *Coeff,
 
         // Copy arrays asynchronously
         CHECK_CUDA(
-            cudaMemcpyAsync(gpu[i].d_Coeff, Coeff + gpu[i].xOffset*7, gpu[i].dataN * 7 * sizeof(float), 
+            cudaMemcpyAsync(gpu[i].d_Coeff, Coeff + (gpu[i].xOffset * 7), gpu[i].dataN * 7 * sizeof(float), 
                             cudaMemcpyHostToDevice, gpu[i].stream)
         );
         CHECK_CUDA(
@@ -505,6 +505,13 @@ int gpuHandler(options *opts,
             printf("MUlti-GPU Solve: %d Devices Detected\n", nDevices);
         // Multi-GPU Execution
         MGPU_Solve *gpu = (MGPU_Solve *)malloc(sizeof(MGPU_Solve) * nDevices);
+
+        // Divide the data for each GPU
+
+        for(int i = 0; i < nDevices; i++)
+        {
+            gpu[i].dataN = mesh->nElements / nDevices;
+        }
 
         // take into account "odd" data sizes
         for (int i = 0; i < mesh->nElements % nDevices; i++)

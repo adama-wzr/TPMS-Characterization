@@ -52,7 +52,8 @@ typedef struct
     float dz;
     long int iterCount;
     float conv;
-    float VF; // solid volume fraction
+    float SVF; // solid volume fraction
+    float porosity;
 } meshInfo;
 
 // Array holding output data
@@ -60,10 +61,11 @@ typedef struct
 typedef struct
 {
     float porosity;
-    float ePorosity;
+    float SVF;
     float Deff_TH_MAX;
     float Deff;
     float Tau;
+    float TauSolid;
     float SA;
     long int nElements;
     float pore50;
@@ -78,5 +80,34 @@ typedef std::tuple<int, int, int> coord;
 // Declare the type of function pointers for TPMS definitions
 
 typedef int (*tpms_ptr)(char*, float, meshInfo*);
+
+
+/*
+
+Initializers:
+
+*/
+
+void InitSave(saveInfo *save)
+{
+    /*
+        This function simply initializes a declared save function.
+    */
+
+    save->porosity = 0.0f;
+    save->SVF = 0.0f;
+    save->Tau = 0.0f;
+    save->TauSolid = 0.0f;
+    save->SA = 0.0f;
+    save->Deff = 0.0f;
+    save->Deff_TH_MAX = 0.0f;
+    save->nElements = 1;
+    save->pore50 = 0.0f;
+    save->pore50 = 0.0f;
+    save->nVoxel = 1;
+
+    
+    return;
+}
 
 #endif

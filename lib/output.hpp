@@ -36,16 +36,16 @@ void outputGeneral(options *opts, saveInfo *save)
 
     if (headerFlag)
     {
-        fprintf(OUT, "Structure,nElement,iso,pore,SA,"
-                     "DeffMax,Deff,Tau,pore50,part50\n");
+        fprintf(OUT, "Structure,nElement,iso,pore,SVF,SA,"
+                     "Tau,TauSolid,pore50,part50\n");
     }
 
     // print output from inputs
 
     fprintf(OUT, "%d,%d,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e\n",
         opts->TPMS_Type, save->nVoxel, opts->isoValues,
-        save->porosity, save->SA, save->Deff_TH_MAX,
-        save->Deff, save->Tau, save->pore50, save->part50);
+        save->porosity, save->SVF, save->SA,
+        save->Tau, save->TauSolid, save->pore50, save->part50);
 
     fclose(OUT);
     return;

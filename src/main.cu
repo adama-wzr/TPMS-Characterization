@@ -24,6 +24,10 @@ int main(int argc, char **argv)
     meshInfo mesh;
     saveInfo save;
 
+    // Initialize save array
+
+    InitSave(&save);
+
     // Other useful flags
 
     bool errorFlag = 0;
@@ -52,7 +56,9 @@ int main(int argc, char **argv)
     TPMS_Init(&P, &opts, &mesh);
 
     // Update the save array
-    save.porosity = 1.0 - mesh.VF;
+    save.nVoxel = opts.nVoxels;
+    save.porosity = mesh.porosity;
+    save.SVF = mesh.SVF;
 
     // Calculate Surface Area, if applicable
     if (opts.runSA)
@@ -61,10 +67,14 @@ int main(int argc, char **argv)
     
     // calculate Tortuosity, if applicable
 
+    // pore-space tortuosity
     if (opts.Tau)
-        errorFlag = TauSim3D(&opts, &mesh, &save, P);
+        errorFlag = TauSim3D(&opts, &mesh, &save, P, 0);
 
-    
+    // solid space tortuosity
+    if (opts.Tau)
+        errorFlag = TauSim3D(&opts, &mesh, &save, P, 1);
+
     if(errorFlag)
         return 1;
 

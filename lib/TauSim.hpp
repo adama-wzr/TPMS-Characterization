@@ -14,7 +14,7 @@ Andre Adam
 #include <data_structures.hpp>
 #include <src_cuda/gpuSolve.cuh>
 
-void SetDC_Tau(float *DC, char *P, meshInfo* mesh)
+void SetDC_Tau(float *DC, char *P, meshInfo* mesh, int POI)
 {
     /*
         Function SetDC_Tau:
@@ -23,6 +23,7 @@ void SetDC_Tau(float *DC, char *P, meshInfo* mesh)
             - pointer DC, array holding diffusion coefficients
             - pointer to P, array holding the structure.
             - pointer to struct holding the mesh info array.
+            - integer POI (phase of interest)
         Outputs:
             - None.
         
@@ -31,7 +32,7 @@ void SetDC_Tau(float *DC, char *P, meshInfo* mesh)
 
     for (int i = 0; i < mesh->nElements; i++)
     {
-        if (P[i] == 0)
+        if (P[i] == POI)
             DC[i] = 1.0;
     }
 
@@ -862,7 +863,7 @@ int Disc3D_TauPB(options *opts,
     return 0;
 }
 
-int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P)
+int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
 {
     /*
         Function Tau3D_Sim:
@@ -872,6 +873,7 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P)
             - pointer to mesh struct
             - pointer to save struct
             - pointer to array holding the structure, P.
+            - integer POI, phase of intereset
         Outputs:
             - None.
         
@@ -891,7 +893,7 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P)
 
     // Populate the array based on the structure
 
-    SetDC_Tau(DC, P, mesh);
+    SetDC_Tau(DC, P, mesh, POI);
 
     // Find participating media, this will remove cutoff channels
 
@@ -977,14 +979,29 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P)
 
     double qAvg = (Q1 + Q2) / (2.0 * mesh->numCellsY * mesh->numCellsZ);
 
-    save->Deff_TH_MAX = save->porosity * 1.0;
-    save->Deff = qAvg / (opts->CRight - opts->CLeft);
-    save->Tau = save->Deff_TH_MAX / save->Deff;
-
-    if (opts->verbose == 1)
+    if (POI == 0)
     {
-        printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
-               save->porosity, save->Deff_TH_MAX, save->Deff, save->Tau);
+        save->Deff_TH_MAX = save->porosity;
+        save->Deff = qAvg / (opts->CRight - opts->CLeft);
+        save->Tau = save->Deff_TH_MAX / save->Deff;
+
+        if (opts->verbose == 1)
+        {
+            printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
+                   save->porosity, save->Deff_TH_MAX, save->Deff, save->Tau);
+        }
+    }
+    else if (POI == 1)
+    {
+        save->Deff_TH_MAX = save->SVF;
+        save->Deff = qAvg / (opts->CRight - opts->CLeft);
+        save->TauSolid = save->Deff_TH_MAX / save->Deff;
+
+        if (opts->verbose == 1)
+        {
+            printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
+                   save->SVF, save->Deff_TH_MAX, save->Deff, save->TauSolid);
+        }
     }
 
     return 0;

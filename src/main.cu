@@ -80,6 +80,8 @@ int main(int argc, char **argv)
 
     // Calculate size distributions
 
+    omp_set_num_threads(opts.nThreads);
+
     if(opts.partSD)
         partSD_3D(&opts, &mesh, &save, P, 1);
     else

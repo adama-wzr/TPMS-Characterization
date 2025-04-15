@@ -11,6 +11,7 @@ Andre Adam
 
 #include <data_structures.hpp>
 #include <stdlib.h>
+#include <omp.h>
 
 int pass12_Global(bool *target_arr, float *EDT, int j, int k, int width, int height, int depth, int primaryPhase)
 {

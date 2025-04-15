@@ -83,7 +83,8 @@ int Gyroid(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -149,7 +150,8 @@ int TPMS_D(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -213,7 +215,8 @@ int SchwarzP(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -278,7 +281,8 @@ int IWP(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -341,7 +345,8 @@ int Neovius(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -403,7 +408,8 @@ int C_Y(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -469,7 +475,8 @@ int Lidinoid(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -535,7 +542,8 @@ int OCTO(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -602,7 +610,8 @@ int FRD(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -668,7 +677,8 @@ int S(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -740,7 +750,8 @@ int PpCP(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -808,7 +819,8 @@ int Split_P(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -872,7 +884,8 @@ int F(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -940,7 +953,8 @@ int CD(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1006,7 +1020,8 @@ int G_prime(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1072,7 +1087,8 @@ int G_prime2(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1142,7 +1158,8 @@ int D_prime(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1210,7 +1227,8 @@ int K(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1280,7 +1298,8 @@ int CS(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1349,7 +1368,8 @@ int Y(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1415,7 +1435,8 @@ int pmY(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1480,7 +1501,8 @@ int CpmY(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1548,7 +1570,8 @@ int CI2_Y(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1614,7 +1637,8 @@ int W(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1680,7 +1704,8 @@ int Qstar(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1748,7 +1773,8 @@ int CG(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }
@@ -1818,7 +1844,8 @@ int Slotted_P(char *P, float b, meshInfo *info)
         }
     }
 
-    info->VF = (float)count / (float)info->nElements;
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
 
     return 0;
 }

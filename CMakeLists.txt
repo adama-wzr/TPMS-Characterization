@@ -1,8 +1,8 @@
 # This file obviously doesn't work, but we will make it one day, trust
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 # version information--------------------------
-project(TPMS-Characterization LANGUAGES CXX CUDA VERSION 1.0)
+project(TPMS-Characterization LANGUAGES CXX VERSION 1.0)
 
 # Include directories -------------------------
 include_directories(
@@ -10,26 +10,30 @@ include_directories(
     "${PROJECT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/lib"
     "${PROJECT_SOURCE_DIR}/tests"
-    "${PROJECT_SOURCE_DIR}/src_cuda"
 )
 
 # Different methods are neede for Linux based systems and Windows
 # I don't know anyone with a Mac, so no build available for that
+# Look for CUDA
 
-if (WIN32)
+find_package(CUDA QUIET)
+
+if(CUDA_FOUND)
     enable_language(CUDA)
-endif (WIN32)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE CUDA_ARCHITECTURES all-major)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
 
-if (UNIX)
-    find_package(OpenMP REQUIRED)
-    find_package(CUDA REQUIRED)
-    set(CMAKE_CUDA_COMPILER "nvcc")
-endif (UNIX)
+    add_executable(TPMS-Characterization
+        main.cpp
+    )
+
+endif()
 
 # Set Project Sources ----------------------------------------
 
 set(PROJECT_SOURCES
-    src/main.cu
+    src/main.cpp
     # src/helper.cuh
 )
 
@@ -41,17 +45,16 @@ add_executable(
 )
 
 # Compilation options to ensure this works with CUDA + OpenMP
-set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
-# set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
+# if(CUDA_FOUND)
+#     set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+#     set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
+#     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
+# endif()
 
-# target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
+target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
 
 if (UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
-
     target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
 endif (UNIX)
 

@@ -1,12 +1,15 @@
 #ifndef _GPU_SOLVE
 #define _GPU_SOLVE
 
-#include <lib/data_structures.hpp>
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+
 #include <GPU_kernels.cuh>
 #include <cuda_structs.cuh>
+
+#include <lib/data_structures.hpp>
+
 
 #define MAX_GPU 32
 

@@ -12,8 +12,14 @@ Andre Adam
 #include <math.h>
 #include <stdlib.h>
 #include <data_structures.hpp>
-#include <cuda.h>
-#include <cuda_solvers/gpuSolve.cu>
+
+#ifdef USE_CUDA
+    #include <cuda_solvers/gpuSolve.cu>
+#endif
+
+#ifndef USE_CUDA
+    #include <cpu_solvers/cpuErrorHandler.hpp>
+#endif
 
 void SetDC_Tau(float *DC, char *P, meshInfo* mesh, int POI)
 {

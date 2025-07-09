@@ -12,7 +12,8 @@ Andre Adam
 #include <math.h>
 #include <stdlib.h>
 #include <data_structures.hpp>
-#include <src_cuda/gpuSolve.cuh>
+#include <cuda.h>
+#include <cuda_solvers/gpuSolve.cu>
 
 void SetDC_Tau(float *DC, char *P, meshInfo* mesh, int POI)
 {
@@ -24,7 +25,7 @@ void SetDC_Tau(float *DC, char *P, meshInfo* mesh, int POI)
             - pointer to P, array holding the structure.
             - pointer to struct holding the mesh info array.
             - integer POI (phase of interest)
-        Outputs:
+        Outputs: 
             - None.
         
         Function will populate the DC array with diffusion coefficients.

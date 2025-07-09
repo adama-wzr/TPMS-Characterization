@@ -10,6 +10,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/lib"
     "${PROJECT_SOURCE_DIR}/tests"
+    "${PROJECT_SOURCE_DIR}/lib/cpu_solvers"
 )
 
 # Different methods are neede for Linux based systems and Windows
@@ -19,14 +20,18 @@ include_directories(
 find_package(CUDA QUIET)
 
 if(CUDA_FOUND)
+
+    include_directories(
+        TPMS-Characterization PUBLIC
+        "${PROJECT_SOURCE_DIR}/lib/cuda_solvers"
+    )
+
     enable_language(CUDA)
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE CUDA_ARCHITECTURES all-major)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
 
-    add_executable(TPMS-Characterization
-        main.cpp
-    )
+    add_definitions(-DUSE_CUDA)
 
 endif()
 
@@ -34,7 +39,6 @@ endif()
 
 set(PROJECT_SOURCES
     src/main.cpp
-    # src/helper.cuh
 )
 
 # Add Executable --------------------------------------------

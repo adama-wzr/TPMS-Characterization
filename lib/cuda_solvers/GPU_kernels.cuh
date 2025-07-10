@@ -14,7 +14,10 @@ Andre Adam.
 #include "cuda_runtime.h"
 #include "cuda.h"
 #include "device_launch_parameters.h"
+
 #include <data_structures.hpp>
+#include <iostream>
+
 
 // CUDA CHECK ERROR
 

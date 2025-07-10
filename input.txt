@@ -7,11 +7,11 @@ Tau: 1
 pb: 1
 Convergence: 1e-6
 MaxIter: 1e6
-partSD: 1
-poreSD: 1
+partSD: 0
+poreSD: 0
 poreSDOut: poreSD.csv
 partSDOut: partSD.csv
 nThreads: 8
 useGPU: 1
-numGPU: 1
-runSA: 1
+numGPU: 2
+runSA: 0

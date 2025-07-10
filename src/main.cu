@@ -2,7 +2,20 @@
 
 Main file will handle program execution.
 
-Last modified 04/03/2025
+***
+
+This is an exact copy of main.cpp
+
+The reason for this is because I can't write cuda
+code properly to compile with c++ nor do I know
+how to do the separate compilation and link the
+executables.
+
+Therefore, this is the solution I found :)
+
+***
+
+Last modified 07/09/2025
 Andre Adam
 */
 

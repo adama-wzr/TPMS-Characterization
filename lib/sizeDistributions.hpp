@@ -479,6 +479,12 @@ int poreSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
 
     // Loop variables
 
+    int nThreads;
+
+    nThreads = omp_get_num_threads();
+
+    printf("poreSD Num Threads = %d\n", nThreads);
+
     long int p_sum, d_sum, e_sum;
 
     e_sum = 1;      // initialized for while loop

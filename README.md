@@ -5,12 +5,15 @@ This repository is dedicated to holding code pertaining to the characterization 
 
 The versions are often soft requirements, meaning they are the only versions we have tested on, but might work on older versions.
 
-- NVIDIA Compute Capability >= 8.6
-- CUDA >= 11.5 (tested all the way up to 12.8)
 - gcc >= 11.0
 - C++17 or newer
 - CMAKE 3.8 or newer
 - OpenMP (any recent version is fine)
+
+**Soft Requirements**
+
+- NVIDIA GPU (only tested with compute capability >= 7.6)
+- CUDA >= 11.5 (tested all the way up to 12.8)
 
 # Compilation
 

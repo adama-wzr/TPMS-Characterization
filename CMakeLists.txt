@@ -13,9 +13,14 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/lib/cpu_solvers"
 )
 
+if (UNIX)
+    find_package(OpenMP REQUIRED)
+endif (UNIX)
+
 # Different methods are neede for Linux based systems and Windows
 # I don't know anyone with a Mac, so no build available for that
-# Look for CUDA
+
+# Look for CUDA ------------------------------------------
 
 find_package(CUDA QUIET)
 
@@ -33,13 +38,27 @@ if(CUDA_FOUND)
 
     add_definitions(-DUSE_CUDA)
 
+    if (UNIX)
+        set(CMAKE_CUDA_COMPILER "nvcc")
+    endif()
+
+    set(PROJECT_SOURCES
+        src/main.cu
+    )
+
+else()
+
+    set(PROJECT_SOURCES
+        src/main.cpp
+    )
+
 endif()
 
 # Set Project Sources ----------------------------------------
 
-set(PROJECT_SOURCES
-    src/main.cpp
-)
+# set(PROJECT_SOURCES
+#     src/main.cpp
+# )
 
 # Add Executable --------------------------------------------
 

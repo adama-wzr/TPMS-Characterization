@@ -54,6 +54,8 @@ typedef struct
     float conv;
     float SVF; // solid volume fraction
     float porosity;
+    int nChannels;
+    bool congruent;     // 0 == false, 1 == true
 } meshInfo;
 
 // Array holding output data

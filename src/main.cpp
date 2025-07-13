@@ -2,7 +2,7 @@
 
 Main file will handle program execution.
 
-Last modified 04/03/2025
+Last modified 07/12/2025
 Andre Adam
 */
 
@@ -14,6 +14,7 @@ Andre Adam
 #include <lib/TauSim.hpp>
 #include <lib/sizeDistributions.hpp>
 #include <lib/output.hpp>
+#include <subDomainFF.hpp>
 #include <math.h>
 
 
@@ -64,6 +65,13 @@ int main(int argc, char **argv)
     if (opts.runSA)
         SA(P, &mesh, &save);
     
+    // Get N-Channels
+
+    char *subDomains = (char *)malloc(sizeof(char) * mesh.nElements);
+
+    subDomainFF(&mesh, P, subDomains);
+
+    printf("Da fuck is happening?\n");
     
     // calculate Tortuosity, if applicable
 

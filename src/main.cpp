@@ -70,8 +70,6 @@ int main(int argc, char **argv)
     char *subDomains = (char *)malloc(sizeof(char) * mesh.nElements);
 
     subDomainFF(&mesh, P, subDomains);
-
-    printf("Da fuck is happening?\n");
     
     // calculate Tortuosity, if applicable
 

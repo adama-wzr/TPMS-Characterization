@@ -13,73 +13,76 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/lib/cpu_solvers"
 )
 
-if (UNIX)
-    find_package(OpenMP REQUIRED)
-endif (UNIX)
-
 # Different methods are neede for Linux based systems and Windows
 # I don't know anyone with a Mac, so no build available for that
 
-# Look for CUDA ------------------------------------------
-
-find_package(CUDA QUIET)
-
-if(CUDA_FOUND)
-
-    include_directories(
-        TPMS-Characterization PUBLIC
-        "${PROJECT_SOURCE_DIR}/lib/cuda_solvers"
-    )
-
-    enable_language(CUDA)
-    set(CMAKE_CUDA_STANDARD 17)
-    set(CMAKE CUDA_ARCHITECTURES all-major)
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
-
-    add_definitions(-DUSE_CUDA)
-
-    if (UNIX)
-        set(CMAKE_CUDA_COMPILER "nvcc")
-    endif()
-
-    set(PROJECT_SOURCES
-        src/main.cu
-    )
-
-else()
-
-    set(PROJECT_SOURCES
-        src/main.cpp
-    )
-
-endif()
-
-# Set Project Sources ----------------------------------------
-
-# set(PROJECT_SOURCES
-#     src/main.cpp
-# )
-
-# Add Executable --------------------------------------------
-
-add_executable(
-    TPMS-Characterization
-    ${PROJECT_SOURCES}
-)
-
-# Compilation options to ensure this works with CUDA + OpenMP
-# if(CUDA_FOUND)
-#     set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-#     set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
-#     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
-# endif()
-
-target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
+# Unix File ----------------------------------------------
 
 if (UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
+
+    find_package(OpenMP REQUIRED)
+    find_package(CUDA QUIET)
+
+    if(CUDA_FOUND)
+        include_directories(
+            TPMS-Characterization PUBLIC
+            "${PROJECT_SOURCE_DIR}/lib/cuda_solvers"
+        )
+
+        find_package(OpenMP REQUIRED)
+        find_package(CUDA REQUIRED)
+        set(CMAKE_CUDA_COMPILER "nvcc")
+
+        add_definitions(-DUSE_CUDA)
+
+        set(PROJECT_SOURCES
+            src/main.cu
+        )
+        
+        # Add Executable --------------------------------------------
+        add_executable(
+            TPMS-Characterization
+            ${PROJECT_SOURCES}
+        )
+
+        set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+        set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
+
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
+        target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
+        target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
+
+    else()
+    # No CUDA found
+        set(PROJECT_SOURCES
+            src/main.cpp
+        )
+        # Add Executable --------------------------------------------
+        add_executable(
+            TPMS-Characterization
+            ${PROJECT_SOURCES}
+        )
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
+        target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
+    endif()
 endif (UNIX)
+
+# Windows File (no GPU support) ------------------------------
+
+if(WIN32)
+    set(PROJECT_SOURCES
+            src/main.cpp
+    )
+    # Add Executable --------------------------------------------
+    add_executable(
+        TPMS-Characterization
+        ${PROJECT_SOURCES}
+    )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
+endif(WIN32)
 
 # Set Tests Executables -------------------------------------
 

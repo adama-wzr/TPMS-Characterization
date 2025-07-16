@@ -192,7 +192,7 @@ __global__ void JI_SOR3D_kernelPB(
                 {
                     if (mySlice == 0)
                     {
-                        // Periodic Back
+                        // Periodic Front
                         sigma += A[myIdx * 7 + j] * x[(nSlices - 1) * nRows * nCols + myRow * nCols + myCol];
                     } else
                     {

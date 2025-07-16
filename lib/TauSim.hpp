@@ -12,6 +12,7 @@ Andre Adam
 #include <math.h>
 #include <stdlib.h>
 #include <data_structures.hpp>
+#include <cpu_solvers/cpuSolvers.hpp>
 
 #ifdef USE_CUDA
     #include <cuda_solvers/gpuSolve.cu>
@@ -962,8 +963,7 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
     else
     {
         // cpuSolve
-        printf("No CPU Solvers implemented yet.\n");
-        return 1;
+        pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Concentration);
     }
 
     // Calculate Tortuosity

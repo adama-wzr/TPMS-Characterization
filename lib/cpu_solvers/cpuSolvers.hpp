@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <math.h>
+#include <omp.h>
 
 #include <data_structures.hpp>
 
@@ -39,11 +40,10 @@ void pGS3D_inner(meshInfo *mesh, float *Coeff, float *RHS, float *x_vec)
     {
         sigma = 0.0;
 
-        if (Coeff[i*7 + 0] == 0)
-            continue;
-        
         for(int j = 1; j < 7; j++)
         {
+            if (Coeff[i*7 + j] == 0)
+                continue;
             if (j == 1)
             {
                 // West
@@ -82,6 +82,116 @@ void pGS3D_inner(meshInfo *mesh, float *Coeff, float *RHS, float *x_vec)
     return;
 }
 
+void pGS3D_innerPB(meshInfo *mesh, float *Coeff, float *RHS, float *x_vec)
+{
+    /*
+        Function pGS3D_innerPB:
+        Inputs:
+            - pointer to mesh struct
+            - pointer to Coeff matrix
+            - pointer RHS
+            - pointer to x_vec
+        Outputs:
+            - none
+        
+        Function will complete one iteration of the inner loop of
+        the Guass-Seidel iteration, with periodic boundaries.
+        (periodic in y and z only)
+    */
+
+    // set variables, start parallel CPU code
+
+    int nCols = mesh->numCellsX;
+    int nRows = mesh->numCellsY;
+    int nSlices = mesh->numCellsZ;
+
+    #pragma omp parallel for schedule(auto)
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        float sigma = 0.0;
+        int mySlice = i/(nRows * nCols);
+        int myRow = (i - mySlice * nRows * nCols)/nCols;
+        int myCol = i - mySlice * nRows * nCols - myRow * nCols;
+        
+        for(int j = 1; j < 7; j++)
+        {
+            if (Coeff[i*7 + j] == 0)
+                continue;
+            if (j == 1)
+            {
+                // West
+                sigma += Coeff[i*7 + j] * x_vec[i - 1];
+            }
+            else if(j == 2)
+            {
+                // East
+                sigma += Coeff[i*7 + j] * x_vec[i + 1];
+            }
+            else if(j == 3)
+            {
+                if(myRow == nRows - 1)
+                {
+                    // periodic south
+                    sigma += Coeff[i*7 + j] * x_vec[mySlice * nRows * nCols + myCol];
+                }
+                else
+                {
+                    // South
+                    sigma += Coeff[i*7 + j] * x_vec[i + nCols];
+                }
+            }
+            else if(j == 4)
+            {
+                if(myRow == 0)
+                {
+                    // Periodic North
+                    sigma += Coeff[i*7 + j] * x_vec[mySlice * nRows * nCols + (nRows - 1) * nCols + myCol];    
+                }
+                else
+                {
+                    // North
+                    sigma += Coeff[i*7 + j] * x_vec[i - nCols];
+                }
+            }
+            else if(j == 5)
+            {
+                if(mySlice == nSlices - 1)
+                {
+                    // periodic Back
+                    sigma += Coeff[i*7 + j] * x_vec[myRow * nCols + myCol];
+                }
+                else
+                {
+                    // Back
+                    sigma += Coeff[i*7 + j] * x_vec[i + nCols * nRows];
+                } 
+            }
+            else if(j == 6)
+            {
+                if(mySlice == 0)
+                {
+                    // Periodic Front
+                    sigma += Coeff[i*7 + j] * x_vec[(nSlices - 1) * nCols * nRows + myRow * nCols + myCol];    
+                }
+                else
+                {
+                    // Front
+                    sigma += Coeff[i*7 + j] * x_vec[i - nCols * nRows];
+                }
+            }
+        }
+        // update x
+        x_vec[i] = 1.0/Coeff[i*7 + 0] * (RHS[i] - sigma);
+    } // end for
+
+    return;
+}
+
+/*
+
+    Handles for Solvers:
+
+*/
 
 int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, float *RHS, float *x_vec)
 {
@@ -118,11 +228,21 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
     while(nIter < opts->MAX_ITER && conv > opts->ConvergeCriteria)
     {
         // call solver
-        pGS3D_inner(mesh, Coeff, RHS, x_vec);
+        if(opts->PB)
+        {
+            // periodic boundary
+            pGS3D_innerPB(mesh, Coeff, RHS, x_vec);
+        }
+        else
+        {
+            // no flux boundaries
+            pGS3D_inner(mesh, Coeff, RHS, x_vec);
+        }
     
-        // update 
-
+        // update iter count
         nIter++;
+
+        // check convergence (if applicable)
 
         if(nIter % iterToCheck == 0 && nIter != 0)
         {
@@ -135,7 +255,7 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
                     continue;
                 
                 count++;
-                sum += fabs((oldX[index] - x_vec[index])/oldX[index]);
+                sum += fabs((x_vec[index] - oldX[index])/x_vec[index]);
             }
             
             conv = sum / count;
@@ -143,7 +263,9 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
             memcpy(oldX, x_vec, sizeof(float) * mesh->nElements);
         }
 
-        if(nIter % 10000 == 0 && opts->verbose == 1)
+        // update user (if applicable)
+
+        if(nIter % 1000 == 0 && opts->verbose == 1)
         {
             printf("Iteration = %ld, pct Change = %1.3e\n", nIter, conv);
         }

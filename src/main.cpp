@@ -20,10 +20,16 @@ Andre Adam
 
 int main(int argc, char **argv)
 {
+    // performance
+    fflush(stdout);
     // Declare data structure with general user options
     options opts;
     meshInfo mesh;
     saveInfo save;
+
+    // globally set nThreads
+
+    omp_set_num_threads(opts.nThreads);
 
     // Initialize save array
 
@@ -85,8 +91,6 @@ int main(int argc, char **argv)
         return 1;
 
     // Calculate size distributions
-
-    omp_set_num_threads(opts.nThreads);
 
     if(opts.partSD)
         partSD_3D(&opts, &mesh, &save, P, 1);

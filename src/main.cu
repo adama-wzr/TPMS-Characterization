@@ -33,10 +33,15 @@ Andre Adam
 
 int main(int argc, char **argv)
 {
+    // performance
+    fflush(stdout);
     // Declare data structure with general user options
     options opts;
     meshInfo mesh;
     saveInfo save;
+
+    // globally set nThreads
+    omp_set_num_threads(opts.nThreads);
 
     // Initialize save array
 

@@ -21,7 +21,8 @@ include_directories(
 if (UNIX)
 
     find_package(OpenMP REQUIRED)
-    enable_language(CUDA)
+    find_package(CUDA QUIET)
+    #enable_language(CUDA)
 
     if(CUDA_FOUND)
         include_directories(

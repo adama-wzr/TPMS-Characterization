@@ -336,6 +336,10 @@ int partSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
     memset(D, 0, sizeof(bool) * mesh->nElements);
     memset(B, 0, sizeof(bool) * mesh->nElements);
 
+    // set num threads
+
+    omp_set_num_threads(opts->nThreads);
+
     // if P[i] = POI, B[i] = 1
     #pragma omp parallel for schedule(auto)
     for (int i = 0; i < mesh->nElements; i++)
@@ -479,11 +483,9 @@ int poreSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
 
     // Loop variables
 
-    int nThreads;
+    // set num threads
 
-    nThreads = omp_get_num_threads();
-
-    printf("poreSD Num Threads = %d\n", nThreads);
+    omp_set_num_threads(opts->nThreads);
 
     long int p_sum, d_sum, e_sum;
 

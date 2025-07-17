@@ -4,6 +4,7 @@
 #include <iostream>
 #include <math.h>
 #include <omp.h>
+#include <string.h>
 
 #include <data_structures.hpp>
 
@@ -33,12 +34,10 @@ void pGS3D_inner(meshInfo *mesh, float *Coeff, float *RHS, float *x_vec)
     long int i = 0;
     float sigma = 0.0;
 
-    #pragma omp parallel private (i, sigma)
-
     #pragma omp parallel for schedule(auto)
-    for(i = 0; i < mesh->nElements; i++)
+    for(int i = 0; i < mesh->nElements; i++)
     {
-        sigma = 0.0;
+        float sigma = 0.0;
 
         for(int j = 1; j < 7; j++)
         {
@@ -109,6 +108,7 @@ void pGS3D_innerPB(meshInfo *mesh, float *Coeff, float *RHS, float *x_vec)
     for(int i = 0; i < mesh->nElements; i++)
     {
         float sigma = 0.0;
+        
         int mySlice = i/(nRows * nCols);
         int myRow = (i - mySlice * nRows * nCols)/nCols;
         int myCol = i - mySlice * nRows * nCols - myRow * nCols;
@@ -212,6 +212,9 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
         A is Coeff and b is RHS.
     */
 
+    // set num threads
+    omp_set_num_threads(opts->nThreads);
+
     // declare useful variables
     long int nIter = 0;
     int iterToCheck = 1000;
@@ -220,7 +223,7 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
     float sigma = 0.0;  // update sigma is private
 
     // get array for comparison
-    float *oldX = (float *)malloc(sizeof(float) * mesh->nElements);
+    float *oldX = (float *)malloc(mesh->nElements * sizeof(float));
 
     memcpy(oldX, x_vec, sizeof(float) * mesh->nElements);
     
@@ -241,7 +244,6 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
     
         // update iter count
         nIter++;
-
         // check convergence (if applicable)
 
         if(nIter % iterToCheck == 0 && nIter != 0)
@@ -264,7 +266,6 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
         }
 
         // update user (if applicable)
-
         if(nIter % 1000 == 0 && opts->verbose == 1)
         {
             printf("Iteration = %ld, pct Change = %1.3e\n", nIter, conv);

@@ -301,6 +301,9 @@ int partSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
 
     if(opts->verbose)
         printf("Particle-Size Distribution:\n");
+    
+    // set num threads
+    omp_set_num_threads(opts->nThreads);
 
     // Loop variables
 
@@ -335,10 +338,6 @@ int partSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
     memset(E, 0, sizeof(bool) * mesh->nElements);
     memset(D, 0, sizeof(bool) * mesh->nElements);
     memset(B, 0, sizeof(bool) * mesh->nElements);
-
-    // set num threads
-
-    omp_set_num_threads(opts->nThreads);
 
     // if P[i] = POI, B[i] = 1
     #pragma omp parallel for schedule(auto)

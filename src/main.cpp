@@ -27,10 +27,6 @@ int main(int argc, char **argv)
     meshInfo mesh;
     saveInfo save;
 
-    // globally set nThreads
-
-    omp_set_num_threads(opts.nThreads);
-
     // Initialize save array
 
     InitSave(&save);

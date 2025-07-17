@@ -25,18 +25,22 @@ if (UNIX)
     #enable_language(CUDA)
 
     if(CUDA_FOUND)
+        enable_language(CUDA)
+        
+        set(PROJECT_SOURCES
+            src/main.cu
+        )
+        
         include_directories(
             TPMS-Characterization PUBLIC
             "${PROJECT_SOURCE_DIR}/lib/cuda_solvers"
         )
 
         set(CMAKE_CUDA_COMPILER "nvcc")
-        find_package(CUDA)
+
         add_definitions(-DUSE_CUDA)
 
-        set(PROJECT_SOURCES
-            src/main.cu
-        )
+        
         
         # Add Executable --------------------------------------------
         add_executable(
@@ -47,10 +51,11 @@ if (UNIX)
         set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
         set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
 
+        target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
+
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
         target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
-        target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
 
     else()
         # No CUDA found

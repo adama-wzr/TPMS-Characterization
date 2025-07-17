@@ -30,10 +30,6 @@ void pGS3D_inner(meshInfo *mesh, float *Coeff, float *RHS, float *x_vec)
         the Guass-Seidel iteration.
     */
 
-    // set variables, start parallel CPU code
-    long int i = 0;
-    float sigma = 0.0;
-
     #pragma omp parallel for schedule(auto)
     for(int i = 0; i < mesh->nElements; i++)
     {
@@ -219,8 +215,6 @@ int pGS3D_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff, fl
     long int nIter = 0;
     int iterToCheck = 1000;
     float conv = 1.0;
-    long int i = 0;     // index is private
-    float sigma = 0.0;  // update sigma is private
 
     // get array for comparison
     float *oldX = (float *)malloc(mesh->nElements * sizeof(float));

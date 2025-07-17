@@ -15,7 +15,7 @@ Therefore, this is the solution I found :)
 
 ***
 
-Last modified 07/09/2025
+Last modified 07/17/2025
 Andre Adam
 */
 
@@ -29,6 +29,7 @@ Andre Adam
 #include <lib/output.hpp>
 #include <subDomainFF.hpp>
 #include <math.h>
+
 
 
 int main(int argc, char **argv)
@@ -76,7 +77,12 @@ int main(int argc, char **argv)
     save.porosity = mesh.porosity;
     save.SVF = mesh.SVF;
 
-    // Calculate Surface Area, if applicable
+    /*
+    
+        Surface Area (per channel?)
+
+    */
+
     if (opts.runSA)
         SA(P, &mesh, &save);
     
@@ -85,8 +91,20 @@ int main(int argc, char **argv)
     char *subDomains = (char *)malloc(sizeof(char) * mesh.nElements);
 
     subDomainFF(&mesh, P, subDomains);
+
+    // allocated space for sub-domain data
+
+    mesh.sdInfo = (subDinfo *)malloc(sizeof(subDinfo) * mesh.nChannels);
+
+    // Fully-Connected or not?
     
-    // calculate Tortuosity, if applicable
+    subDomainFC(&mesh, subDomains);
+    
+    /*
+    
+        Tortuosity:
+    
+    */
 
     // pore-space tortuosity
     if (opts.Tau)
@@ -98,6 +116,12 @@ int main(int argc, char **argv)
 
     if(errorFlag)
         return 1;
+    
+    /*
+    
+        Size - Distributions:
+    
+    */
 
     // Calculate size distributions
 

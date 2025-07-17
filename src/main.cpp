@@ -2,7 +2,7 @@
 
 Main file will handle program execution.
 
-Last modified 07/12/2025
+Last modified 07/17/2025
 Andre Adam
 */
 
@@ -81,6 +81,10 @@ int main(int argc, char **argv)
     // allocated space for sub-domain data
 
     mesh.sdInfo = (subDinfo *)malloc(sizeof(subDinfo) * mesh.nChannels);
+
+    // Fully-Connected or not?
+    
+    subDomainFC(&mesh, subDomains);
     
     /*
     

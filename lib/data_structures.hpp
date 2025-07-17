@@ -2,7 +2,7 @@
 
 This file is dedicated to data structure definitions.
 
-Last modified 03/27/2025
+Last modified 07/17/2025
 Andre Adam
 
 */
@@ -12,6 +12,18 @@ Andre Adam
 
 #include <set>
 #include <tuple>
+
+// Sub-Domain Information
+
+typedef struct
+{
+    bool FC;        // 0 for no-flow, 1 for flow
+    float VF;       // local volume fraction
+    float SA;       // surface area
+    float Tau;      // tortuosity
+    float pore50;   // avg pore size
+}subDinfo;
+
 // Handling user input
 
 typedef struct
@@ -56,6 +68,9 @@ typedef struct
     float porosity;
     int nChannels;
     bool congruent;     // 0 == false, 1 == true
+    int nSubDomains;    // number of independent domains 
+    int nFC;            // number of 'fully-connected' subdomains
+    subDinfo *sdInfo;   // pointer to array of structs of sub-domain info
 } meshInfo;
 
 // Array holding output data

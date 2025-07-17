@@ -871,7 +871,7 @@ int Disc3D_TauPB(options *opts,
     return 0;
 }
 
-int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
+int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDomain, int POI)
 {
     /*
         Function Tau3D_Sim:
@@ -881,6 +881,7 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
             - pointer to mesh struct
             - pointer to save struct
             - pointer to array holding the structure, P.
+            - pointer to subDomain array
             - integer POI, phase of intereset
         Outputs:
             - None.
@@ -996,6 +997,39 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
         {
             printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
                    save->porosity, save->Deff_TH_MAX, save->Deff, save->Tau);
+        }
+        if(opts->subOut)
+        {
+            for(int sub = 1; sub <= mesh->nChannels; sub++)
+            {
+                // skip if not fully connected
+                if(mesh->sdInfo[sub-1].FC == 0)
+                    continue;
+                
+                // calculate local fluxes
+                Q1 = 0;
+                Q2 = 0;
+                for (int k = 0; k < mesh->numCellsZ; k++)
+                {
+                    for (int i = 0; i < mesh->numCellsY; i++)
+                    {
+                        long int indexL = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + left;
+                        long int indexR = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + right;
+                        if(subDomain[indexL] == sub)
+                            Q1 += DC[indexL] * (Concentration[indexL] - opts->CLeft) / (mesh->dx / 2);
+                        if(subDomain[indexR] == sub)
+                            Q2 += DC[indexR] * (opts->CRight - Concentration[indexR]) / (mesh->dx / 2);
+                    }
+                }
+                // calculate avg flux and tau
+                qAvg = (Q1 + Q2) / (2.0 * mesh->numCellsY * mesh->numCellsZ);
+                float D_TH_MAX = mesh->sdInfo[sub-1].VF;
+                float Deff = qAvg / (opts->CRight - opts->CLeft);
+                mesh->sdInfo[sub-1].Tau = D_TH_MAX / Deff;
+                // print
+                if(opts->verbose)
+                    printf("sub = %d, VF = %1.3f, Tau = %1.3f\n", sub, mesh->sdInfo[sub-1].VF, mesh->sdInfo[sub-1].Tau);
+            }
         }
     }
     else if (POI == 1)

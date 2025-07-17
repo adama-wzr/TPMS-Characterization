@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     mesh.sdInfo = (subDinfo *)malloc(sizeof(subDinfo) * mesh.nChannels);
 
     // Fully-Connected or not?
-    
+
     subDomainFC(&mesh, subDomains);
     
     /*
@@ -108,11 +108,11 @@ int main(int argc, char **argv)
 
     // pore-space tortuosity
     if (opts.Tau)
-        errorFlag = TauSim3D(&opts, &mesh, &save, P, 0);
+        errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 0);
 
     // solid space tortuosity
     if (opts.Tau)
-        errorFlag = TauSim3D(&opts, &mesh, &save, P, 1);
+        errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 1);
 
     if(errorFlag)
         return 1;

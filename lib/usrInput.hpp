@@ -49,6 +49,8 @@ void optionsInit(options *opts)
     opts->CLeft = 0;
     opts->CRight = 1;
 
+    opts->subOut = 0;
+
     // Default Solver Options
     opts->nThreads = 1;
     opts->useGPU = 0;
@@ -121,6 +123,9 @@ void printOptsGeneral(options *opts)
     printf("Side Length = %d\n", opts->nVoxels);
     printf("Number of CPU Threads = %d\n", opts->nThreads);
     printf("Output Name = %s\n", opts->outputFilename);
+
+    if(opts->subOut)
+        printf("Printing Sub-Domain Information\n");
 
     if (opts->Tau)
     {
@@ -269,6 +274,10 @@ void readInputGeneral(char *filename, options *opts)
         else if (strcmp(tempC, "runSA:") == 0)
         {
             opts->runSA = (int)tempD;
+        }
+        else if (strcmp(tempC, "subOut:") == 0)
+        {
+            opts->subOut = 1;
         }
     }
     return;

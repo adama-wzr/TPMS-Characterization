@@ -49,6 +49,7 @@ typedef struct
     char *partSDOut;        // particle size distribution file name
     int maxR;               // maximum scan radius;
     int runSA;              // calculate surface area flag
+    int subOut;             // Per-sub domain output flag
 } options;
 
 // Mesh related information
@@ -67,8 +68,7 @@ typedef struct
     float SVF; // solid volume fraction
     float porosity;
     int nChannels;
-    bool congruent;     // 0 == false, 1 == true
-    int nSubDomains;    // number of independent domains 
+    bool congruent;     // 0 == false, 1 == true (currently unused)
     int nFC;            // number of 'fully-connected' subdomains
     subDinfo *sdInfo;   // pointer to array of structs of sub-domain info
 } meshInfo;

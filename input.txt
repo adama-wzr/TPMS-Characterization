@@ -15,3 +15,4 @@ nThreads: 8
 useGPU: 1
 numGPU: 2
 runSA: 0
+subOut: 1

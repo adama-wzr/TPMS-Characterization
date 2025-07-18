@@ -2,7 +2,7 @@
 
 Handle everything related to size-distributions.
 
-Last modified 04/03/2025
+Last modified 07/18/2025
 Andre Adam
 */
 
@@ -12,6 +12,82 @@ Andre Adam
 #include <data_structures.hpp>
 #include <stdlib.h>
 #include <omp.h>
+
+
+void subDomain_dist(meshInfo *mesh, int *R, char *subDomain, int lastR)
+{
+    /*
+        Function subDomain_dist:
+        Inputs:
+            - pointer to meshInfo
+            - pointer to pore-radius array
+            - pointer to subDomain array
+            - lastR (int) last radius that was scanned
+        Outputs:
+            - none
+        
+        Function will calculate the pore size-distribution on
+        a sub-domain basis (for each flow channel), and store
+        the information where appropriate in the meshInfo
+        data structure.
+    */
+
+    // declare useful variables
+
+    int *pore_removed = (int *)malloc(sizeof(int) * lastR);
+
+    // repeat inner loop for each sub-domain
+
+    for(int nSub = 1; nSub <= mesh->nChannels; nSub++)
+    {
+        // don't care about disconnected channels
+        if(mesh->sdInfo->FC == 0)
+        {
+            mesh->sdInfo->pore50 = 0.00;
+            continue;
+        }
+
+        // zero pore-removed array
+
+        memset(pore_removed, 0, lastR * sizeof(int));
+
+        // scan the whole figure
+
+        for(long int index = 0; index < mesh->nElements; index++)
+        {
+            if (subDomain[index] == nSub)
+            {
+                pore_removed[R[index]]++;
+            }
+        }
+
+        // get total removed (should be equal to eVF of channel)
+
+        long int sum = 0;
+
+        for(int r = 0; r < lastR; r++)
+        {
+            sum += pore_removed[r];
+        }
+
+        // Calculate the individual pore50
+
+        double p = 0.0;
+        double D50 = 0.0;
+
+        for(int r = 0; r < lastR; r++)
+        {
+            p = (double)pore_removed[r] / sum;
+            D50 += p*(2*(r + 1));
+        }
+
+        mesh->sdInfo[nSub - 1].pore50 = D50;
+    }// end for (nSub)
+
+    free(pore_removed);
+
+    return;
+}
 
 int pass12_Global(bool *target_arr, float *EDT, int j, int k, int width, int height, int depth, int primaryPhase)
 {
@@ -470,7 +546,7 @@ int partSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
     return 0;
 }
 
-int poreSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
+int poreSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, char *subDomain, int POI)
 {
     /*
         poreSD_3D:
@@ -629,13 +705,13 @@ int poreSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
 
     save->pore50 = (float)D50/mesh->numCellsX;
 
-    // char filename[100];
+    // Pore size distribution on a subdomain basis?
 
-    // sprintf(filename, "test_pore_R.csv");
-
-    // // save labels
-
-    // saveLabels3D(R, mesh, filename);
+    if(opts->subOut)
+    {
+        // sub-Domain PSD
+        subDomain_dist(mesh, R, subDomain, lastR);
+    }
 
 
     // memory management

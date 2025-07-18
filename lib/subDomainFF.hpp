@@ -247,9 +247,8 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
         } // end while
 
         // calculate VF for this method
-
+        mesh->sdInfo[nSub - 1].nElements = count;
         mesh->sdInfo[nSub-1].VF = (float)count / mesh->nElements;
-        printf("Sub-Domain %d, VF = %1.3e\n", nSub, mesh->sdInfo[nSub-1].VF);
     }
 
     return;

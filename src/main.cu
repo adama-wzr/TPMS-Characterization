@@ -131,7 +131,7 @@ int main(int argc, char **argv)
         save.part50 = 0;
     
     if (opts.poreSD)
-        poreSD_3D(&opts, &mesh, &save, P, 0);
+        poreSD_3D(&opts, &mesh, &save, P, subDomains, 0);
     else
         save.pore50 = 0;
 

@@ -2,7 +2,7 @@
 
 This file is dedicated to data structure definitions.
 
-Last modified 07/17/2025
+Last modified 07/18/2025
 Andre Adam
 
 */
@@ -17,11 +17,12 @@ Andre Adam
 
 typedef struct
 {
-    bool FC;        // 0 for no-flow, 1 for flow
-    float VF;       // local volume fraction
-    float SA;       // surface area
-    float Tau;      // tortuosity
-    float pore50;   // avg pore size
+    bool FC;                // 0 for no-flow, 1 for flow
+    long int nElements;     // total pixels in volume
+    float VF;               // local volume fraction
+    float SA;               // surface area
+    float Tau;              // tortuosity
+    float pore50;           // avg pore size
 }subDinfo;
 
 // Handling user input

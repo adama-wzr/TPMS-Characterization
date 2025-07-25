@@ -11,7 +11,7 @@ Andre Adam
 
 #include <data_structures.hpp>
 
-void SA(char *P, meshInfo *mesh, saveInfo *save)
+void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
 {
     /*
         Fuction SA:
@@ -19,11 +19,14 @@ void SA(char *P, meshInfo *mesh, saveInfo *save)
             - pointer to P array holding the structure
             - pointer to meshInfo struct
             - pointer to saveInfo struct
+            - pointer to opts struct
         Outputs:
             - None.
 
         Calculates the surface area of the domain in units of voxel squared. The
         surface area is calculated by voxel-face-interface counting.
+        Will calculate surface area with periodic boundaries (y and z) 
+        if user enters the periodic boundary (pb) flag.
     */
 
     size_t interfaceCount = 0;
@@ -71,10 +74,22 @@ void SA(char *P, meshInfo *mesh, saveInfo *save)
             if (P[i] != P[i - nCols])
                 interfaceCount++;
         }
+        else if(opts->PB)
+        {
+            // periodic (North) boundary
+            if (P[i] != P[slice * nRows * nCols + (nRows - 1) * nCols + col])
+                interfaceCount++;
+        }
 
         if (row != nRows - 1)
         {
             if (P[i] != P[i + nCols])
+                interfaceCount++;
+        }
+        else if(opts->PB)
+        {
+            // periodic (South) boundary
+            if (P[i] != P[slice * nRows * nCols + col])
                 interfaceCount++;
         }
 
@@ -85,10 +100,22 @@ void SA(char *P, meshInfo *mesh, saveInfo *save)
             if (P[i] != P[i - nRows * nCols])
                 interfaceCount++;
         }
+        else if(opts->PB)
+        {
+            // periodic (Front) boundary
+            if (P[i] != P[(nSlices - 1) * nRows * nCols + row * nCols + col])
+                interfaceCount++;
+        }
 
         if (slice != nSlices - 1)
         {
             if (P[i] != P[i + nRows * nCols])
+                interfaceCount++;
+        }
+        else if(opts->PB)
+        {
+            // periodic (Back) boundary
+            if (P[i] != P[row * nCols + col])
                 interfaceCount++;
         }
     }
@@ -117,6 +144,10 @@ void SA_sub(options *opts, meshInfo *mesh, char *subD)
 
     // Copy struct variables locally
     int nRows, nCols, nSlices;
+
+    nCols = mesh->numCellsX;
+    nRows = mesh->numCellsY;
+    nSlices = mesh->numCellsZ;
 
     // Loop over the whole structure
     int slice, row, col;
@@ -163,10 +194,22 @@ void SA_sub(options *opts, meshInfo *mesh, char *subD)
                 if (subD[i] != subD[i - nCols])
                     interfaceCount++;
             }
+            else if(opts->PB)
+            {
+                // periodic (North) boundary
+                if (subD[i] != subD[slice * nRows * nCols + (nRows - 1) * nCols + col])
+                    interfaceCount++;
+            }
 
             if (row != nRows - 1)
             {
                 if (subD[i] != subD[i + nCols])
+                    interfaceCount++;
+            }
+            else if(opts->PB)
+            {
+                // periodic (South) boundary
+                if (subD[i] != subD[slice * nRows * nCols + col])
                     interfaceCount++;
             }
 
@@ -177,16 +220,29 @@ void SA_sub(options *opts, meshInfo *mesh, char *subD)
                 if (subD[i] != subD[i - nRows * nCols])
                     interfaceCount++;
             }
+            else if(opts->PB)
+            {
+                // periodic (Front) boundary
+                if (subD[i] != subD[(nSlices - 1) * nRows * nCols + row * nCols + col])
+                    interfaceCount++;
+            }
 
             if (slice != nSlices - 1)
             {
                 if (subD[i] != subD[i + nRows * nCols])
                     interfaceCount++;
             }
+            else if(opts->PB)
+            {
+                // periodic (Back) boundary
+                if (subD[i] != subD[row * nCols + col])
+                    interfaceCount++;
+            }
         }
         // done searching
         mesh->sdInfo[nSub - 1].SA = (float) interfaceCount / mesh->sdInfo[nSub - 1].nElements;
-        printf("Test, Channel = %d, SA = %1.3e\n", nSub - 1, mesh->sdInfo[nSub - 1].SA );
+        if(opts->verbose)
+            printf("Channel = %d, SSA = %1.3e\n", nSub - 1, mesh->sdInfo[nSub - 1].SA );
     }
     return;
 }

@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     */
 
     if (opts.runSA)
-        SA(P, &mesh, &save);
+        SA(P, &mesh, &save, &opts);
     
     if (opts.runSA && opts.subOut)
         SA_sub(&opts, &mesh, subDomains);

@@ -62,15 +62,6 @@ int main(int argc, char **argv)
     save.nVoxel = opts.nVoxels;
     save.porosity = mesh.porosity;
     save.SVF = mesh.SVF;
-
-    /*
-    
-        Surface Area (per channel?)
-
-    */
-
-    if (opts.runSA)
-        SA(P, &mesh, &save);
     
     // Get N-Channels
 
@@ -83,8 +74,21 @@ int main(int argc, char **argv)
     mesh.sdInfo = (subDinfo *)malloc(sizeof(subDinfo) * mesh.nChannels);
 
     // Fully-Connected or not?
-    
+
     subDomainFC(&mesh, subDomains);
+
+    /*
+    
+        Surface Area (per channel?)
+
+    */
+
+    if (opts.runSA)
+        SA(P, &mesh, &save);
+    
+    if (opts.runSA && opts.subOut)
+        SA_sub(&opts, &mesh, subDomains);
+        
     
     /*
     

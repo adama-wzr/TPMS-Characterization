@@ -81,7 +81,7 @@ void subDomain_dist(meshInfo *mesh, int *R, char *subDomain, int lastR)
             D50 += p*(2*(r + 1));
         }
 
-        mesh->sdInfo[nSub - 1].pore50 = D50;
+        mesh->sdInfo[nSub - 1].pore50 = D50/mesh->numCellsX;
     }// end for (nSub)
 
     free(pore_removed);

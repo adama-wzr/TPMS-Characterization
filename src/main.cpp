@@ -2,7 +2,7 @@
 
 Main file will handle program execution.
 
-Last modified 07/17/2025
+Last modified 07/25/2025
 Andre Adam
 */
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     else
         save.pore50 = 0;
 
-    outputGeneral(&opts, &save);
+    outputGeneral(&opts, &save, &mesh);
 
     return 0;
 }

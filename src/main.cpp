@@ -41,7 +41,12 @@ int main(int argc, char **argv)
 
     sprintf(inputFilename, "input.txt");
 
-    readInputGeneral(inputFilename, &opts);
+    if (readInputGeneral(inputFilename, &opts) == 1)
+    {
+        // Return if no file exists
+        printf("No Input File Found! Exiting....\n");
+        return 1;
+    }
 
     if (opts.verbose)
         printOptsGeneral(&opts);

@@ -177,7 +177,7 @@ void printOptsGeneral(options *opts)
 
 */
 
-void readInputGeneral(char *filename, options *opts)
+int readInputGeneral(char *filename, options *opts)
 {
     /*
         readInputGeneral Function:
@@ -188,6 +188,15 @@ void readInputGeneral(char *filename, options *opts)
 
         Function reads the input file and stores the options in the opts struct.
     */
+
+    // Check if file exists
+
+    if (FILE *TEST = fopen(filename, "r"))
+    {
+        fclose(TEST);
+    }
+    else
+        return 1;
 
     // initiate necessary variables for input reading
     std::string myText;
@@ -280,7 +289,7 @@ void readInputGeneral(char *filename, options *opts)
             opts->subOut = 1;
         }
     }
-    return;
+    return 0;
 }
 
 #endif

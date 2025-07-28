@@ -494,15 +494,19 @@ int partSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
     long int sum_removed = 0;
     double *partRemoved = (double *)malloc(sizeof(double) * lastR);
 
-    // get particles removed at R = 1
+    memset(partRemoved, 0, sizeof(double) * lastR);
 
-    partRemoved[0] = PDE_sum[0 * 3 + 0] - PDE_sum[0 * 3 + 2];
-    sum_removed += (int)partRemoved[0];
-
-    for (int i = 1; i < lastR; i++)
+    for(long int index = 0; index < mesh->nElements; index++)
     {
-        partRemoved[i] = PDE_sum[(i - 1) * 3 + 2] - PDE_sum[i * 3 + 2];
-        sum_removed += (int)partRemoved[i];
+        if (P[index] == POI)
+        {
+            partRemoved[R[index]]++;
+        }
+    }
+
+    for(int r = 0; r < lastR; r++)
+    {
+        sum_removed+= partRemoved[r];
     }
 
     FILE *partSD_OUT = fopen(opts->partSDOut, "w+");
@@ -525,14 +529,6 @@ int partSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
     }
 
     save->part50 = (float)D50/mesh->numCellsX;
-
-    // char filename[100];
-
-    // sprintf(filename, "testR.csv");
-
-    // // save labels
-
-    // saveLabels3D(R, mesh, filename);
 
     // memory management
 
@@ -673,15 +669,19 @@ int poreSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, char *subD
     long int sum_removed = 0;
     double *partRemoved = (double *)malloc(sizeof(double) * lastR);
 
-    // get particles removed at R = 1
+    memset(partRemoved, 0, sizeof(double) * lastR);
 
-    partRemoved[0] = PDE_sum[0 * 3 + 0] - PDE_sum[0 * 3 + 2];
-    sum_removed += (int)partRemoved[0];
-
-    for (int i = 1; i < lastR; i++)
+    for(long int index = 0; index < mesh->nElements; index++)
     {
-        partRemoved[i] = PDE_sum[(i - 1) * 3 + 2] - PDE_sum[i * 3 + 2];
-        sum_removed += (int)partRemoved[i];
+        if (P[index] == POI)
+        {
+            partRemoved[R[index]]++;
+        }
+    }
+
+    for(int r = 0; r < lastR; r++)
+    {
+        sum_removed+= partRemoved[r];
     }
 
     FILE *poreSDOut = fopen(opts->poreSDOut, "w+");

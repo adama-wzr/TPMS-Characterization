@@ -46,27 +46,26 @@ int errorCheckInput(options *opts)
 
     // check crit
 
-    if(opts->isoValues >= TPMS_Crit[opts->TPMS_Type])
+    if (opts->isoValues >= TPMS_Crit[opts->TPMS_Type - 1])
     {
-        printf("Iso-Value %f for TPMS %s is beyond crit. value %f\n", 
-            opts->isoValues, TPMS_Names[opts->TPMS_Type], TPMS_Crit[opts->TPMS_Type]);
+        printf("Iso-Value %f for TPMS %s is beyond crit. value %f\n",
+               opts->isoValues, TPMS_Names[opts->TPMS_Type - 1], TPMS_Crit[opts->TPMS_Type - 1]);
         return 1;
     }
 
-    if (opts->isoValues >= TPMS_Pinch[opts->TPMS_Type] && opts->Tau_f == 1)
+    if (opts->isoValues >= TPMS_Pinch[opts->TPMS_Type - 1] && opts->Tau_f == 1)
     {
         printf("*********************************************************\n\n");
         printf("                        WARNING!!                        \n");
-        printf("Iso-Value %f for TPMS %s is beyond pinch value %f\n", 
-            opts->isoValues, TPMS_Names[opts->TPMS_Type], TPMS_Pinch[opts->TPMS_Type]);
+        printf("Iso-Value %f for TPMS %s is beyond pinch value %f\n",
+               opts->isoValues, TPMS_Names[opts->TPMS_Type - 1], TPMS_Pinch[opts->TPMS_Type - 1]);
         printf("Skipping Tau-F simulation\n\n");
         printf("*********************************************************\n\n");
         opts->Tau_f = 0;
     }
-    
+
     return 0;
 }
-
 
 /*
 

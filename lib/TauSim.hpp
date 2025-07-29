@@ -989,7 +989,19 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     if (POI == 0)
     {
-        save->Deff_TH_MAX = save->porosity;
+        // get effective porosity
+        size_t count = 0;
+        for(long int i = 0; i < mesh->nElements; i++)
+        {
+            if (DC[i] != 0)
+                count++;
+        }
+
+        save->ePore = (float) count / mesh->nElements;
+
+        // Calculate tortuosity
+
+        save->Deff_TH_MAX = save->ePore;
         save->Deff = qAvg / (opts->CRight - opts->CLeft);
         save->Tau = save->Deff_TH_MAX / save->Deff;
 

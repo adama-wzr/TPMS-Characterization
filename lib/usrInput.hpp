@@ -23,6 +23,19 @@ Andre Adam
 
 /*
 
+Input Error Check:
+
+*/
+
+int errorCheckInput(options *opts)
+{
+    
+    return 0;
+}
+
+
+/*
+
 Initialize opts
 
 */
@@ -41,7 +54,8 @@ void optionsInit(options *opts)
 
     // Initialize all flags to false
 
-    opts->Tau = 0;
+    opts->Tau_s = 0;
+    opts->Tau_f = 0;
     opts->PB = 0;
     opts->runSA = 0;
     opts->poreSD = 0;
@@ -127,7 +141,7 @@ void printOptsGeneral(options *opts)
     if(opts->subOut)
         printf("Printing Sub-Domain Information\n");
 
-    if (opts->Tau)
+    if (opts->Tau_s || opts->Tau_f)
     {
         printf("--------------------------------\n");
         printf("Tortuosity Simulation Enabled\n");
@@ -234,9 +248,13 @@ int readInputGeneral(char *filename, options *opts)
         {
             opts->TPMS_Type = (int)tempD;
         }
-        else if (strcmp(tempC, "Tau:") == 0)
+        else if (strcmp(tempC, "TauS:") == 0)
         {
-            opts->Tau = (int)tempD;
+            opts->Tau_s = (int)tempD;
+        }
+        else if (strcmp(tempC, "TauF:") == 0)
+        {
+            opts->Tau_f = (int)tempD;
         }
         else if (strcmp(tempC, "poreSD:") == 0)
         {

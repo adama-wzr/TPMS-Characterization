@@ -2,7 +2,7 @@
 
 Main file will handle program execution.
 
-Last modified 07/25/2025
+Last modified 07/29/2025
 Andre Adam
 */
 
@@ -102,11 +102,11 @@ int main(int argc, char **argv)
     */
 
     // pore-space tortuosity
-    if (opts.Tau)
+    if (opts.Tau_f)
         errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 0);
 
     // solid space tortuosity
-    if (opts.Tau)
+    if (opts.Tau_s)
         errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 1);
 
     if(errorFlag)

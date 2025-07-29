@@ -42,7 +42,8 @@ typedef struct
     int nGPU;               // number of GPUs
     int TPMS_Type;          // type of TPMS structure
     float isoValues;        // iso-bounds "b" for TPMS thickness
-    int Tau;                // run tortuosity or not
+    int Tau_s;              // run tortuosity (solid)
+    int Tau_f;              // run tortuosity (void)
     int PB;                 // periodic BC
     int poreSD;             // pore-size distribution
     char *poreSDOut;        // pore size distribution file name
@@ -79,6 +80,7 @@ typedef struct
 typedef struct
 {
     float porosity;
+    float ePore;
     float SVF;
     float Deff_TH_MAX;
     float Deff;
@@ -113,6 +115,7 @@ void InitSave(saveInfo *save)
     */
 
     save->porosity = 0.0f;
+    save->ePore = 0.0f;
     save->SVF = 0.0f;
     save->Tau = 0.0f;
     save->TauSolid = 0.0f;

@@ -38,7 +38,7 @@ void outputGeneral(options *opts, saveInfo *save, meshInfo *mesh)
     if (headerFlag && opts->subOut)
     {
         fprintf(OUT, "Structure,nElement,iso,pore,SVF,SA,"
-                     "Tau,TauSolid,pore50,part50");
+                     "ePore,Tau,TauSolid,pore50,part50");
         
         int nChannel = 0;
         for(int nSub = 1; nSub <= mesh->nChannels; nSub++)
@@ -56,14 +56,14 @@ void outputGeneral(options *opts, saveInfo *save, meshInfo *mesh)
     else if (headerFlag)
     {
         fprintf(OUT, "Structure,nElement,iso,pore,SVF,SA,"
-                     "Tau,TauSolid,pore50,part50\n");
+                     "ePore,Tau,TauSolid,pore50,part50\n");
     }
 
     // print output from inputs
 
-    fprintf(OUT, "%d,%d,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e",
+    fprintf(OUT, "%d,%d,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e,%1.3e",
         opts->TPMS_Type, save->nVoxel, opts->isoValues,
-        save->porosity, save->SVF, save->SA,
+        save->porosity, save->SVF, save->SA, save->ePore,
         save->Tau, save->TauSolid, save->pore50, save->part50);
     
     if(opts->subOut)

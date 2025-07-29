@@ -29,6 +29,40 @@ Input Error Check:
 
 int errorCheckInput(options *opts)
 {
+    /*
+        Function errorCheckInput:
+        Inputs:
+            - pointer to options struct
+        Outputs:
+            - none
+        
+        Function basically auto-corrects user input, mainly
+        in regards to the pinch/crit values and the tortuosity
+        prediction.
+
+        Returns error if isovalue is larger than crit value,
+        as that constitutes a "broken" structure.
+    */
+
+    // check crit
+
+    if(opts->isoValues >= TPMS_Crit[opts->TPMS_Type])
+    {
+        printf("Iso-Value %f for TPMS %s is beyond crit. value %f\n", 
+            opts->isoValues, TPMS_Names[opts->TPMS_Type], TPMS_Crit[opts->TPMS_Type]);
+        return 1;
+    }
+
+    if (opts->isoValues >= TPMS_Pinch[opts->TPMS_Type] && opts->Tau_f == 1)
+    {
+        printf("*********************************************************\n\n");
+        printf("                        WARNING!!                        \n");
+        printf("Iso-Value %f for TPMS %s is beyond pinch value %f\n", 
+            opts->isoValues, TPMS_Names[opts->TPMS_Type], TPMS_Pinch[opts->TPMS_Type]);
+        printf("Skipping Tau-F simulation\n\n");
+        printf("*********************************************************\n\n");
+        opts->Tau_f = 0;
+    }
     
     return 0;
 }

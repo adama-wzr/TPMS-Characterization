@@ -53,9 +53,8 @@ int main(int argc, char **argv)
 
     // Error Check Inputs
 
-    /*
-        Not yet implemented
-    */
+    if(errorCheckInput(&opts) == 1)
+        return 1;
 
     // Create TPMS
 

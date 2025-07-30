@@ -7,13 +7,15 @@ The versions are often soft requirements, meaning they are the only versions we 
 
 - gcc >= 11.0
 - C++17 or newer
-- CMAKE 3.8 or newer
+- CMAKE 3.15 or newer
 - OpenMP (any recent version is fine)
 
-**Soft Requirements**
+**Soft Requirement**
 
 - NVIDIA GPU (only tested with compute capability >= 7.6)
 - CUDA >= 11.5 (tested all the way up to 12.8)
+
+The tortuosity calculation on GPU is hundreds of times faster than CPU and supports multi-GPU execution. GPU is highly recommended for evaluating properties of large (> 300 voxels on each side) structures.
 
 # Compilation
 
@@ -44,4 +46,3 @@ This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 
 # Upcoming Changes
 
 - More test functions.
-- Better separation to ensure operation in computers without CUDA.

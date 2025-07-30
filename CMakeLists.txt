@@ -1,5 +1,5 @@
 # This file obviously doesn't work, but we will make it one day, trust
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # version information--------------------------
 project(TPMS-Characterization LANGUAGES CXX VERSION 1.0)

@@ -1,5 +1,12 @@
 # TPMS-Characterization
-This repository is dedicated to holding code pertaining to the characterization of TPMS structures with finite thicknesses.
+
+This package contains a collection of code for generating voxel-based Triply Periodic Minimal Surfaces (TPMS) and simulating their effective properties. The code is built in a modular and flexible way, since the main goal of this project is to study and classify TPMS structures.
+
+If this package or any data generated using this code is useful in your research, please consider acknowledging it by citing one of the related publications.
+
+# Table of Contents
+
+Not yet.
 
 # Requiremets
 
@@ -12,7 +19,7 @@ The versions are often soft requirements, meaning they are the only versions we 
 
 **Soft Requirement**
 
-- NVIDIA GPU (only tested with compute capability >= 7.6)
+- NVIDIA GPU (only tested with compute capability >= 7.0)
 - CUDA >= 11.5 (tested all the way up to 12.8)
 
 The tortuosity calculation on GPU is hundreds of times faster than CPU and supports multi-GPU execution. GPU is highly recommended for evaluating properties of large (> 300 voxels on each side) structures.
@@ -34,8 +41,14 @@ Instructions for how to build the code:
     - Inside the "Release" folder, the executable "TPMS-Executable.exe" can be found.
 - Linux:
     - The executables will be made directly in the build folder, there is not a "Release" folder.
+- **HPC**
+    - In HPC mode, please change CMakeLists.txt file. For regular computers, using the CUDA compilation flag to "all-major" doesn't seem to be a problem. In HPC, please change that to the compute capability of the available GPU. If the GPU is computer capability 7.0, then change from "all-major" to "70". 
 
 The CMAKE file is the same for Windows and Linux. It has been tested on Windows 11, Ubuntu (22.04 or more recent), and Rocky Linux (HPC). So far it seems to work everywhere, save a few issues when running on PowerShell.
+
+# Publications
+
+# Authors
 
 # Acknowledgements
 
@@ -45,4 +58,10 @@ This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 
 
 # Upcoming Changes
 
-- More test functions.
+- Additional capabilities are planned for the saveTPMS test function:
+    - Print sub-channel information
+    - Print fully-connected sub-channel information only
+    - Congruency tests
+
+# References
+

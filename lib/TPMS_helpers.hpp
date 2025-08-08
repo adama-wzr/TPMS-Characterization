@@ -128,8 +128,8 @@ int TPMS_Init(char **P, options *opts, meshInfo *mesh)
     mesh->nElements = (long int)pow(opts->nVoxels, 3);
 
     float dx = (float)2.0 * PI / (float)mesh->numCellsX;
-    float dy = (float)2.0 * PI / (float)mesh->numCellsX;
-    float dz = (float)2.0 * PI / (float)mesh->numCellsX;
+    float dy = (float)2.0 * PI / (float)mesh->numCellsY;
+    float dz = (float)2.0 * PI / (float)mesh->numCellsZ;
 
     // Allocate and initialize P
 

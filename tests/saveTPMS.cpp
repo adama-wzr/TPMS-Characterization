@@ -11,6 +11,7 @@ Andre Adam
 #include <lib/TPMS_helpers.hpp>
 #include <lib/TPMS_helpers.hpp>
 #include <usrInput.hpp>
+#include <lib/subDomainFF.hpp>
 
 
 void printIndex(char max)
@@ -127,6 +128,31 @@ int main(int argc, char **argv)
 
     // Save
 
+    acceptableInput = false;
+    int saveFlag;
+
+    while (!acceptableInput)
+    {
+        printf("Save sub-domain information (0), solid coordinates (1), or void coordinates (2)?\n");
+        std::cin >> saveFlag;
+        if (saveFlag == 0 || saveFlag == 1 || saveFlag == 2)
+        {
+            acceptableInput = true;
+        }
+        else
+        {
+            printf("The number entered is not one of the options. Try again!\n");
+        }
+    }
+    
+    char *subDomains;
+
+    if(saveFlag == 0)
+    {
+        subDomains = (char *)malloc(sizeof(char) * mesh.nElements);
+        subDomainFF(&mesh, P, subDomains);
+    }
+
     /*
         Need to modify this so we can pick folders, avoid overwrites, etc...
     */
@@ -138,7 +164,12 @@ int main(int argc, char **argv)
 
     TPMS = fopen(OutputFilename, "w+");
 
-    fprintf(TPMS, "x,y,z\n");
+    if(saveFlag == 0)
+    {
+        fprintf(TPMS,"x,y,z,sub\n");
+    }
+    else
+        fprintf(TPMS, "x,y,z\n");
 
     int numCellsX = mesh.numCellsX;
 
@@ -149,9 +180,25 @@ int main(int argc, char **argv)
         int row = (i - slice * numCellsX * numCellsX) / numCellsX;
         int col = i - slice * numCellsX * numCellsX - row * numCellsX;
 
-        if (P[i] == 1)
+        if(saveFlag == 0)
+        {
+            fprintf(TPMS, "%d,%d,%d,%d\n", col, row, slice, (int)subDomains[i]);
+        }else if(saveFlag == 1 && P[i] == 1)
+        {
             fprintf(TPMS, "%d,%d,%d\n", col, row, slice);
+        }
+        else if(saveFlag == 2 && P[i] == 0)
+        {
+            fprintf(TPMS, "%d,%d,%d\n", col, row, slice);
+        }
     }
+
+    if(saveFlag == 0)
+    {
+        free(subDomains);
+    }
+
+    free(P);
 
     fclose(TPMS);
     return 0;

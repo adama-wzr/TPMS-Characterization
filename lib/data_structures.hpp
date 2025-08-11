@@ -2,7 +2,7 @@
 
 This file is dedicated to data structure definitions.
 
-Last modified 07/18/2025
+Last modified 08/11/2025
 Andre Adam
 
 */
@@ -52,6 +52,8 @@ typedef struct
     int maxR;               // maximum scan radius;
     int runSA;              // calculate surface area flag
     int subOut;             // Per-sub domain output flag
+    char *CMAP_Name;        // name for concentration map printing  (tortuosity)
+    bool CMAP;
 } options;
 
 // Mesh related information
@@ -126,7 +128,6 @@ void InitSave(saveInfo *save)
     save->pore50 = 0.0f;
     save->pore50 = 0.0f;
     save->nVoxel = 1;
-
     
     return;
 }

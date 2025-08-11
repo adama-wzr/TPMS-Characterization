@@ -12,6 +12,7 @@ Andre Adam
 #include <math.h>
 #include <stdlib.h>
 #include <data_structures.hpp>
+#include <output.hpp>
 #include <cpu_solvers/cpuSolvers.hpp>
 
 #ifdef USE_CUDA
@@ -1010,6 +1011,15 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
             printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
                    save->porosity, save->Deff_TH_MAX, save->Deff, save->Tau);
         }
+        // print CMAP if needed
+        if(opts->CMAP)
+        {
+            char out_end[] = "_TauF.csv";
+            char filename[200];
+            strcpy(filename, opts->CMAP_Name);
+            strncat(filename, out_end, 100);
+            printCMAP(opts, mesh, filename, Concentration, P, 0);
+        }
         if(opts->subOut)
         {
             for(int sub = 1; sub <= mesh->nChannels; sub++)
@@ -1041,6 +1051,16 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
                 // print
                 if(opts->verbose)
                     printf("sub = %d, VF = %1.3f, Tau = %1.3f\n", sub, mesh->sdInfo[sub-1].VF, mesh->sdInfo[sub-1].Tau);
+                // print CMAP if needed
+                if(opts->CMAP)
+                {
+                    char out_end[100];
+                    sprintf(out_end, "TauSub%d.csv", sub);
+                    char filename[200];
+                    strcpy(filename, opts->CMAP_Name);
+                    strncat(filename, out_end, 100);
+                    printCMAP(opts, mesh, filename, Concentration, subDomain, sub);
+                }
             }
         }
     }
@@ -1054,6 +1074,15 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
         {
             printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
                    save->SVF, save->Deff_TH_MAX, save->Deff, save->TauSolid);
+        }
+        // print CMAP if needed
+        if(opts->CMAP)
+        {
+            char out_end[] = "_TauS.csv";
+            char filename[200];
+            strcpy(filename, opts->CMAP_Name);
+            strncat(filename, out_end, 100);
+            printCMAP(opts, mesh, filename, Concentration, P, 1);
         }
     }
 

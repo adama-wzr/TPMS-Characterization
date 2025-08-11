@@ -6,6 +6,52 @@
 #include <data_structures.hpp>
 #include <stdlib.h>
 
+
+void printCMAP(options *opts, meshInfo *mesh, char *filename, float *C, char *P, int POI)
+{
+    /*
+        printCMAP Function:
+        Inputs:
+            - pointer to user options
+            - pointer to mesh info
+            - pointer to filename (to save)
+            - pointer to concentration distribution
+            - pointer to phase-array
+            - phase of interest for CMAP
+        Outputs:
+            - none.
+        
+        Function will create filename
+    */
+    // create file
+    FILE *OUT = fopen(filename, "w+");
+
+    fprintf(OUT,"x,y,z,C\n");
+
+    int row, col, slice;
+
+    // print
+
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        if(P[i] != POI)
+            continue;
+        
+        slice = i / (mesh->numCellsX * mesh->numCellsY);
+        row = (i - slice * mesh->numCellsX*mesh->numCellsY)/mesh->numCellsX;
+        col = i - slice * mesh->numCellsX*mesh->numCellsY - row * mesh->numCellsX;
+        
+        fprintf(OUT,"%d,%d,%d,%1.3e\n", col, row, slice, C[i]);
+    }
+
+    // close
+
+    fclose(OUT);
+
+    return;
+}
+
+
 void outputGeneral(options *opts, saveInfo *save, meshInfo *mesh)
 {
     /*

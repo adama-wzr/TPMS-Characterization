@@ -5,6 +5,7 @@ TPMS: 3
 Verbose: 1
 TauS: 1
 TauF: 1
+CMAP: test
 pb: 1
 Convergence: 1e-6
 MaxIter: 1e6

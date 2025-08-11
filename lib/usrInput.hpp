@@ -109,11 +109,15 @@ void optionsInit(options *opts)
     // default TPMS_Type
     opts->TPMS_Type = 1;
 
+    // CMAP printing defaults to false
+    opts->CMAP = 0;
+
     // Allocate Space for file names
 
     opts->outputFilename = (char *)malloc(200 * sizeof(char));
     opts->partSDOut = (char *)malloc(200 * sizeof(char));
     opts->poreSDOut = (char *)malloc(200 * sizeof(char));
+    opts->CMAP_Name = (char *)malloc(200 * sizeof(char));
 
     return;
 }
@@ -322,6 +326,13 @@ int readInputGeneral(char *filename, options *opts)
         {
             sscanf(myText.c_str(), "%s %s", tempC, tempFilenames);
             strcpy(opts->poreSDOut, tempFilenames);
+        }
+        else if (strcmp(tempC, "CMAP:") == 0)
+        {
+            sscanf(myText.c_str(), "%s %s", tempC, tempFilenames);
+            strcpy(opts->CMAP_Name, tempFilenames);
+            // update flag to true
+            opts->CMAP = 1;
         }
         else if (strcmp(tempC, "useGPU:") == 0)
         {

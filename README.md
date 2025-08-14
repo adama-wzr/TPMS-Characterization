@@ -1,12 +1,16 @@
 # TPMS-Characterization
 
-This package contains a collection of code for generating voxel-based Triply Periodic Minimal Surfaces (TPMS) and simulating their effective properties. The code is built in a modular and flexible way, since the main goal of this project is to study and classify TPMS structures.
-
-If this package or any data generated using this code is useful in your research, please consider acknowledging it by citing one of the related publications.
+This package contains a collection of code for generating voxelated Triply Periodic Minimal Surfaces (TPMS) and simulating their effective properties. The code is built in a modular and flexible way, since the main goal of this project is to study and classify TPMS structures.
 
 # Table of Contents
 
-Not yet.
+1. [Requirements](#requirements)
+2. [Compilation](#compilation)
+3. [Publications](#publications)
+4. [Authors](#authors)
+5. [Acknowledgements](#acknowledgements)
+6. [Upcoming Changes](#upcoming-changes)
+7. [References](#references)
 
 # Requiremets
 
@@ -48,7 +52,27 @@ The CMAKE file is the same for Windows and Linux. It has been tested on Windows 
 
 # Publications
 
+There are currently no publications associated with this code.
+
 # Authors
+
+- Main developer: Andre Adam (The University of Kansas)
+    - [ResearchGate](https://www.researchgate.net/profile/Andre-Adam-2)
+    - [GoogleScholar](https://scholar.google.com/citations?hl=en&user=aP_rDkMAAAAJ)
+    - [ORCID](https://orcid.org/0000-0002-4502-3033)
+    - [GitHub](https://github.com/adama-wzr)
+    - [Website](https://adama-wzr.github.io/)
+- Ideator: Silven Stallard (The University of Kansas)
+    - [ResearchGate](https://www.researchgate.net/profile/Silven_Stallard)
+- Advisor: Dr. Guang Yang (Oak-Ridge National Laboratory)
+    - [Website](https://www.ornl.gov/staff-profile/guang-yang)
+    - [GoogleScholar](https://scholar.google.com/citations?user=Ph_5mDMAAAAJ&hl=en)
+- Advisor: Dr. Theodore L. Bergman (The University of Kansas)
+    - [GoogleScholar](https://scholar.google.com/citations?user=uHtkVqwAAAAJ&hl=en&oi=ao)
+    - [ScholarGPS](https://scholargps.com/scholars/99871203759685/theodore-l-bergman)
+- Advisor and Corresponding Author: Dr. Xianglin Li (Washingtion University in St. Louis)
+    - [Website](https://xianglinli.wixsite.com/mysite)
+    - [GoogleScholar](https://scholar.google.com/citations?user=8y0Vd8cAAAAJ&hl=en)
 
 # Acknowledgements
 

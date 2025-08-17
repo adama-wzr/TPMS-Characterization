@@ -10,7 +10,7 @@ This package contains a collection of code for generating voxelated Triply Perio
 4. [Authors](#authors)
 5. [Acknowledgements](#acknowledgements)
 6. [Upcoming Changes](#upcoming-changes)
-7. [References](#references)
+
 
 # Requiremets
 
@@ -60,7 +60,6 @@ There are currently no publications associated with this code.
     - [ResearchGate](https://www.researchgate.net/profile/Andre-Adam-2)
     - [GoogleScholar](https://scholar.google.com/citations?hl=en&user=aP_rDkMAAAAJ)
     - [ORCID](https://orcid.org/0000-0002-4502-3033)
-    - [GitHub](https://github.com/adama-wzr)
     - [Website](https://adama-wzr.github.io/)
 - Ideator: Silven Stallard (The University of Kansas)
     - [ResearchGate](https://www.researchgate.net/profile/Silven_Stallard)
@@ -82,10 +81,8 @@ This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 
 
 # Upcoming Changes
 
-- Additional capabilities are planned for the saveTPMS test function:
-    - Print sub-channel information
-    - Print fully-connected sub-channel information only
+- Additional capabilities are planned:
     - Congruency tests
-
-# References
-
+    - Built-in convergence assessment.
+    - UI for navigating data and creating input files.
+    - Code documentation.

@@ -2,7 +2,7 @@
 
 This file is dedicated to surface area functions.
 
-Last modified 03/31/2025
+Last modified 08/27/2025
 Andre Adam
 
 */
@@ -29,8 +29,6 @@ void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
         Will calculate surface area with periodic boundaries (y and z) 
         if user enters the periodic boundary (pb) flag.
     */
-
-    size_t interface_count = 0;
 
     float surf_area = 0.0;
 
@@ -160,12 +158,14 @@ void SA_sub(options *opts, meshInfo *mesh, char *subD)
             - pointer to sub-domains array
         Output:
             - None
-        
+
         Function will calculate the specific surface area
         on a sub-domain basis.
     */
 
-    size_t interfaceCount = 0;
+    float surface_area = 0.0;
+
+    float total_volume = pow(2.0 * PI, 3);
 
     // Copy struct variables locally
     int nRows, nCols, nSlices;
@@ -177,17 +177,17 @@ void SA_sub(options *opts, meshInfo *mesh, char *subD)
     // Loop over the whole structure
     int slice, row, col;
 
-    for(int nSub = 1; nSub <= mesh->nChannels; nSub++)
+    for (int nSub = 1; nSub <= mesh->nChannels; nSub++)
     {
         // if not fully-connected, not interested
-        if (mesh->sdInfo[nSub-1].FC == 0)
+        if (mesh->sdInfo[nSub - 1].FC == 0)
             continue;
 
         // zero counts
-        interfaceCount = 0;
-        
+        surface_area = 0.0;
+
         // scan full domain
-        for(int i = 0; i < mesh->nElements; i++)
+        for (int i = 0; i < mesh->nElements; i++)
         {
             // continue if not correct phase
             if (subD[i] != nSub)
@@ -199,43 +199,55 @@ void SA_sub(options *opts, meshInfo *mesh, char *subD)
             col = i - slice * nRows * nCols - row * nCols;
 
             // search immediate neighbors
-            
+
             // cols
             if (col != 0)
             {
                 if (subD[i] != subD[i - 1])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
 
             if (col != nCols - 1)
             {
                 if (subD[i] != subD[i + 1])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
             // rows
 
             if (row != 0)
             {
                 if (subD[i] != subD[i - nCols])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
-            else if(opts->PB)
+            else if (opts->PB)
             {
                 // periodic (North) boundary
                 if (subD[i] != subD[slice * nRows * nCols + (nRows - 1) * nCols + col])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
 
             if (row != nRows - 1)
             {
                 if (subD[i] != subD[i + nCols])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
-            else if(opts->PB)
+            else if (opts->PB)
             {
                 // periodic (South) boundary
                 if (subD[i] != subD[slice * nRows * nCols + col])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
 
             // slices
@@ -243,34 +255,41 @@ void SA_sub(options *opts, meshInfo *mesh, char *subD)
             if (slice != 0)
             {
                 if (subD[i] != subD[i - nRows * nCols])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
-            else if(opts->PB)
+            else if (opts->PB)
             {
                 // periodic (Front) boundary
                 if (subD[i] != subD[(nSlices - 1) * nRows * nCols + row * nCols + col])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
 
             if (slice != nSlices - 1)
             {
                 if (subD[i] != subD[i + nRows * nCols])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
-            else if(opts->PB)
+            else if (opts->PB)
             {
                 // periodic (Back) boundary
                 if (subD[i] != subD[row * nCols + col])
-                    interfaceCount++;
+                {
+                    surface_area += pow(mesh->dx, 2);
+                }
             }
         }
         // done searching
-        mesh->sdInfo[nSub - 1].SA = (float) interfaceCount / mesh->sdInfo[nSub - 1].nElements;
-        if(opts->verbose)
-            printf("Channel = %d, SSA = %1.3e\n", nSub - 1, mesh->sdInfo[nSub - 1].SA );
+        mesh->sdInfo[nSub - 1].SA = surface_area / total_volume;
+        if (opts->verbose)
+            printf("Channel = %d, SSA = %1.3e\n", nSub - 1, mesh->sdInfo[nSub - 1].SA);
     }
     return;
 }
-
 
 #endif

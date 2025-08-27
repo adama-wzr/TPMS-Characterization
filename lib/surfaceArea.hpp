@@ -10,6 +10,7 @@ Andre Adam
 #define _SURF_AREA
 
 #include <data_structures.hpp>
+#include <constants.hpp>
 
 void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
 {
@@ -29,7 +30,11 @@ void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
         if user enters the periodic boundary (pb) flag.
     */
 
-    size_t interfaceCount = 0;
+    size_t interface_count = 0;
+
+    float surf_area = 0.0;
+
+    float total_volume = pow((2.0 * PI), 3);
 
     // Copy struct variables locally
     int nRows, nCols, nSlices;
@@ -58,13 +63,17 @@ void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
         if (col != 0)
         {
             if (P[i] != P[i - 1])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
 
         if (col != nCols - 1)
         {
             if (P[i] != P[i + 1])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
 
         // rows
@@ -72,25 +81,33 @@ void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
         if (row != 0)
         {
             if (P[i] != P[i - nCols])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
-        else if(opts->PB)
+        else if (opts->PB)
         {
             // periodic (North) boundary
             if (P[i] != P[slice * nRows * nCols + (nRows - 1) * nCols + col])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
 
         if (row != nRows - 1)
         {
             if (P[i] != P[i + nCols])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
-        else if(opts->PB)
+        else if (opts->PB)
         {
             // periodic (South) boundary
             if (P[i] != P[slice * nRows * nCols + col])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
 
         // slices
@@ -98,29 +115,37 @@ void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
         if (slice != 0)
         {
             if (P[i] != P[i - nRows * nCols])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
-        else if(opts->PB)
+        else if (opts->PB)
         {
             // periodic (Front) boundary
             if (P[i] != P[(nSlices - 1) * nRows * nCols + row * nCols + col])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
 
         if (slice != nSlices - 1)
         {
             if (P[i] != P[i + nRows * nCols])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
-        else if(opts->PB)
+        else if (opts->PB)
         {
             // periodic (Back) boundary
             if (P[i] != P[row * nCols + col])
-                interfaceCount++;
+            {
+                surf_area += pow(mesh->dx, 2);
+            }
         }
     }
 
-    save->SA = (float)interfaceCount / (float)mesh->nElements;
+    save->SA = surf_area / total_volume;
 
     return;
 }

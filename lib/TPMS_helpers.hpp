@@ -131,6 +131,10 @@ int TPMS_Init(char **P, options *opts, meshInfo *mesh)
     float dy = (float)2.0 * PI / (float)mesh->numCellsY;
     float dz = (float)2.0 * PI / (float)mesh->numCellsZ;
 
+    mesh->dx = dx;
+    mesh->dy = dy;
+    mesh->dz = dz;
+
     // Allocate and initialize P
 
     *P = (char *)malloc(sizeof(char) * mesh->nElements);

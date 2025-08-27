@@ -348,7 +348,7 @@ int readInputGeneral(char *filename, options *opts)
         }
         else if (strcmp(tempC, "subOut:") == 0)
         {
-            opts->subOut = 1;
+            opts->subOut = (int)tempD;
         }
     }
     return 0;

@@ -125,6 +125,10 @@ void outputGeneral(options *opts, saveInfo *save, meshInfo *mesh)
         }
         fprintf(OUT,"\n");
     }
+    else
+    {
+        fprintf(OUT,"\n");
+    }
 
     fclose(OUT);
     return;

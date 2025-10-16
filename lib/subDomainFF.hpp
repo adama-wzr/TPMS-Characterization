@@ -66,7 +66,7 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
             {
                 if(subDomain[slice *nRows * nCols + row * nCols] == nSub)
                 {
-                    cList.insert(std::tuple(0, row, slice));
+                    cList.insert(std::make_tuple(0, row, slice));
                     count++;
                 }
                 checked[slice *nRows * nCols + row * nCols] = 1;
@@ -135,7 +135,7 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
             if (subDomain[tempIndex] == nSub && checked[tempIndex] == 0)
             {
                 count++;
-                cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
             }
             
             checked[tempIndex] = 1;
@@ -159,7 +159,7 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
             if (subDomain[tempIndex] == nSub && checked[tempIndex] == 0)
             {
                 count++;
-                cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
             }
 
             checked[tempIndex] = 1;
@@ -183,7 +183,7 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
             if (subDomain[tempIndex] == nSub && checked[tempIndex] == 0)
             {
                 count++;
-                cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
             }
 
             checked[tempIndex] = 1;
@@ -205,7 +205,7 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
             if (subDomain[tempIndex] == nSub && checked[tempIndex] == 0)
             {
                 count++;
-                cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
             }
 
             checked[tempIndex] = 1;
@@ -223,7 +223,7 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
                 if (subDomain[tempIndex] == nSub && checked[tempIndex] == 0)
                 {
                     count++;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
                 checked[tempIndex] = 1;
             }
@@ -240,7 +240,7 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
                 if (subDomain[tempIndex] == nSub && checked[tempIndex] == 0)
                 {
                     count++;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
                 checked[tempIndex] = 1;
             }
@@ -324,7 +324,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 row = (i - slice * nRows * nCols)/nCols;
                 col = i - slice * nRows * nCols - row * nCols;
 
-                cList.insert(std::tuple(col, row, slice));
+                cList.insert(std::make_tuple(col, row, slice));
 
                 // increment nChannels and assign
                 nChannels++;
@@ -379,7 +379,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             } else
             {
@@ -389,7 +389,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             }
 
@@ -402,7 +402,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             } else
             {
@@ -412,7 +412,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             }
 
@@ -428,7 +428,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             } else
             {
@@ -438,7 +438,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             }
 
@@ -451,7 +451,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             }
             else
@@ -462,7 +462,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             }
 
@@ -478,7 +478,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             }
 
@@ -491,7 +491,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
                 if (subDomains[tempIndex] == -1)
                 {
                     subDomains[tempIndex] = nChannels;
-                    cList.insert(std::tuple(tempCol, tempRow, tempSlice));
+                    cList.insert(std::make_tuple(tempCol, tempRow, tempSlice));
                 }
             }
             // repeat until cList is empty

@@ -12,7 +12,7 @@ This package contains a collection of code for generating voxelated Triply Perio
 6. [Upcoming Changes](#upcoming-changes)
 
 
-# Requiremets
+# Requirements
 
 The versions are often soft requirements, meaning they are the only versions we have tested on, but might work on older versions.
 

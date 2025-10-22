@@ -84,7 +84,6 @@ This research used resources of the Compute and Data Environment for Science (CA
 # Upcoming Changes
 
 - Additional capabilities are planned:
-    - Congruency tests
     - Built-in convergence assessment.
     - UI for navigating data and creating input files.
     - Code documentation.

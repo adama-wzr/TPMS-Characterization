@@ -97,6 +97,7 @@ void optionsInit(options *opts)
     opts->CRight = 1;
 
     opts->subOut = 0;
+    opts->printSD = 0;
 
     // Default Solver Options
     opts->nThreads = 1;
@@ -204,6 +205,10 @@ void printOptsGeneral(options *opts)
         printf("Pore-Size Distribution Enabled\n");
         printf("Output Pore-Size Distribution: %s\n", opts->poreSDOut);
         printf("Cutoff Radius = %d\n", opts->maxR);
+        if (opts->printSD)
+        {
+            printf("Printing PoreSD.\n");
+        }
     }
 
     if (opts->partSD)
@@ -212,6 +217,10 @@ void printOptsGeneral(options *opts)
         printf("Particle-Size Distribution Enabled\n");
         printf("Output Particle-Size Distribution: %s\n", opts->partSDOut);
         printf("Cutoff Radius = %d\n", opts->maxR);
+        if (opts->printSD)
+        {
+            printf("Printing PartSD.\n");
+        }
     }
 
     if (opts->runSA)
@@ -349,6 +358,10 @@ int readInputGeneral(char *filename, options *opts)
         else if (strcmp(tempC, "subOut:") == 0)
         {
             opts->subOut = (int)tempD;
+        }
+        else if(strcmp(tempC, "printSD:") == 0)
+        {
+            opts->printSD = (bool)tempD;
         }
     }
     return 0;

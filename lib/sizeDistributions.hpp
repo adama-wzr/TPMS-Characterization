@@ -89,6 +89,62 @@ void subDomain_dist(meshInfo *mesh, int *R, char *subDomain, int lastR)
     return;
 }
 
+
+int saveLabels3D(int *R,
+                 meshInfo *structureInfo,
+                 char *filename)
+{
+    /*
+        Function saveLabels3D:
+        Inputs:
+            - pointer to R labels
+            - pointer to meshInfo struct
+            - pointer to output filename
+        Output:
+            - None
+
+        Function will save labels for this 3D simulation.
+    */
+    // read data structure
+    int height, width;
+
+    height = structureInfo->numCellsY;
+    width = structureInfo->numCellsX;
+
+    long int nElements = structureInfo->nElements;
+
+    // Open File
+
+    FILE *Particle;
+
+    Particle = fopen(filename, "a+");
+
+    fprintf(Particle, "x,y,z,R\n");
+
+    int slice, row, col;
+
+    // save everything
+
+    for (int i = 0; i < nElements; i++)
+    {
+        if (R[i] != -1)
+        {
+            slice = i / (height * width);
+            row = (i - slice * height * width) / width;
+            col = (i - slice * height * width - row * width);
+            fprintf(Particle, "%d,%d,%d,%d\n", col, row, slice, (int)R[i]);
+        }
+    }
+
+    // close file
+
+    fclose(Particle);
+
+    return 0;
+}
+
+
+
 int pass12_Global(bool *target_arr, float *EDT, int j, int k, int width, int height, int depth, int primaryPhase)
 {
     /*
@@ -530,6 +586,15 @@ int partSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, int POI)
 
     save->part50 = (float)D50/mesh->numCellsX;
 
+    // print SD if needed
+
+    if (opts->printSD)
+    {
+        char filename[100];
+        sprintf(filename, "PartSD_Labels.csv");
+        saveLabels3D(R, mesh, filename);
+    }
+
     // memory management
 
     free(EDT_D);
@@ -711,6 +776,15 @@ int poreSD_3D(options* opts, meshInfo *mesh, saveInfo *save, char *P, char *subD
     {
         // sub-Domain PSD
         subDomain_dist(mesh, R, subDomain, lastR);
+    }
+
+    // print SD if needed
+
+    if (opts->printSD)
+    {
+        char filename[100];
+        sprintf(filename, "PoreSD_Labels.csv");
+        saveLabels3D(R, mesh, filename);
     }
 
 

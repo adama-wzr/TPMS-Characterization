@@ -49,6 +49,7 @@ typedef struct
     char *poreSDOut;        // pore size distribution file name
     int partSD;             // particle size distribution
     char *partSDOut;        // particle size distribution file name
+    bool printSD;           // choose if print size distributions or not
     int maxR;               // maximum scan radius;
     int runSA;              // calculate surface area flag
     int subOut;             // Per-sub domain output flag

@@ -41,9 +41,9 @@ void subDomain_dist(meshInfo *mesh, int *R, char *subDomain, int lastR)
     for(int nSub = 1; nSub <= mesh->nChannels; nSub++)
     {
         // don't care about disconnected channels
-        if(mesh->sdInfo->FC == 0)
+        if(mesh->sdInfo[nSub - 1].FC == 0)
         {
-            mesh->sdInfo->pore50 = 0.00;
+            mesh->sdInfo[nSub - 1].pore50 = 0.00;
             continue;
         }
 

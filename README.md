@@ -52,7 +52,7 @@ The CMAKE file is the same for Windows and Linux. It has been tested on Windows 
 
 # Publications
 
-There are currently no publications associated with this code.
+The publication associated with this code is currently under review.
 
 # Authors
 
@@ -75,7 +75,7 @@ There are currently no publications associated with this code.
 
 # Acknowledgements
 
-This work wouldn't be possible without the computational time awarded as part of the following grants:
+The development of this package wouldn't be possible without the computational time awarded as part of the following grants:
 
 This work used Expanse(GPU) at SDSC through allocations MAT210014 and MAT230071 from the Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support (ACCESS) program, which is supported by National Science Foundation grants #2138259, #2138286, #2138307, #2137603, and #2138296.
 
@@ -83,7 +83,9 @@ This research used resources of the Compute and Data Environment for Science (CA
 
 # Upcoming Changes
 
+**01/16/2026 Update** -> New changes will be made on a development branch. Only stable code will be in the main branch.
+
 - Additional capabilities are planned:
     - Built-in convergence assessment.
-    - UI for navigating data and creating input files.
+    - UI for navigating data and creating input files (maybe).
     - Code documentation.

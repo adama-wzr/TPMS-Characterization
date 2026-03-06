@@ -363,6 +363,10 @@ int readInputGeneral(char *filename, options *opts)
         {
             opts->printSD = (bool)tempD;
         }
+        else if(strcmp(tempC, "runSF:") == 0)
+        {
+            opts->printSD = (bool)tempD;
+        }
     }
     return 0;
 }

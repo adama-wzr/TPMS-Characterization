@@ -19,3 +19,4 @@ useGPU: 1
 numGPU: 1
 runSA: 0
 subOut: 1
+runSF: 0

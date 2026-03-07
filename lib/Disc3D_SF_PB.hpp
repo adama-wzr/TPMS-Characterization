@@ -3,8 +3,18 @@ Discretization function for Shape Factor simulation for TPMS.
 
 3/5/2026
 Last modified by Silven Stallard
+
+Once this is working, I will merge this function on the sfSim.hpp file.
+I will assume this is working for now.
+
+- Andre
 */
 
+#ifndef _DISC_SF
+
+#define _DISC_SF
+
+#include <data_structures.hpp>
 
 int Disc3D_SF_PB(options *opts,
                meshInfo *mesh,
@@ -405,3 +415,4 @@ int Disc3D_SF_PB(options *opts,
     return 0;
 }
 
+#endif

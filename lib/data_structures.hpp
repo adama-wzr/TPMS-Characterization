@@ -54,7 +54,8 @@ typedef struct
     int runSA;              // calculate surface area flag
     int subOut;             // Per-sub domain output flag
     char *CMAP_Name;        // name for concentration map printing  (tortuosity)
-    bool CMAP;
+    bool CMAP;              // print CMAP or no
+    bool runSF;             // Shape factor simulation
 } options;
 
 // Mesh related information
@@ -94,6 +95,7 @@ typedef struct
     float pore50;
     float part50;
     int nVoxel;
+    float SF;
 } saveInfo;
 
 // Define coords for Flood Fill
@@ -129,6 +131,7 @@ void InitSave(saveInfo *save)
     save->pore50 = 0.0f;
     save->pore50 = 0.0f;
     save->nVoxel = 1;
+    save->SF = 0.0f;
     
     return;
 }

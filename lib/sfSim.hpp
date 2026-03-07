@@ -1,13 +1,14 @@
 /*
 
-Tortuosity simulation helper copy. Aim to make it a shape factor simulation helper.
+Shape Factor Simulation.
 
-Last modified 03/02/2026
+Last modified 03/07/2026
 Silven Stallard
+Andre Adam
 */
 
-#ifndef _TAU_SIM
-#define _TAU_SIM
+#ifndef _SF_SIM
+#define _SF_SIM
 
 #include <math.h>
 #include <stdlib.h>

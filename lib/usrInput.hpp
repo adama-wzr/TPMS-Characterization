@@ -223,6 +223,12 @@ void printOptsGeneral(options *opts)
         }
     }
 
+    if(opts->runSF)
+    {
+        printf("Running Shape Factor Simulation\n");
+        printf("GPU solver not available, using CPU instead\n");
+    }
+
     if (opts->runSA)
         printf("Surface Area Calculation Enabled\n");
 
@@ -365,7 +371,7 @@ int readInputGeneral(char *filename, options *opts)
         }
         else if(strcmp(tempC, "runSF:") == 0)
         {
-            opts->printSD = (bool)tempD;
+            opts->runSF = (bool)tempD;
         }
     }
     return 0;

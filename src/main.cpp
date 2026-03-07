@@ -108,6 +108,12 @@ int main(int argc, char **argv)
     if (opts.Tau_s)
         errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 1);
 
+    if (opts.runSF)
+    {
+        printf("Checking that files exist\n");
+        
+    }
+
     if(errorFlag)
         return 1;
     

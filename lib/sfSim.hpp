@@ -15,6 +15,7 @@ Andre Adam
 #include <data_structures.hpp>
 #include <output.hpp>
 #include <cpu_solvers/cpuSolvers.hpp>
+#include <Disc3D_SF_PB.hpp>
 
 #ifdef USE_CUDA
     #include <cuda_solvers/gpuSolve.cu>
@@ -23,6 +24,37 @@ Andre Adam
 #ifndef USE_CUDA
     #include <cpu_solvers/cpuErrorHandler.hpp>
 #endif
+
+void saveDC_SF(float *DC, meshInfo* mesh)
+{
+    /*
+        Function saveDC_SF:
+
+        This is a function to export the information on the discretization
+        for the shape factor code.
+
+        I was originally created as a debug option, and I will just leave it
+        here if anyone wants to use.
+    */
+
+    FILE *TEST = fopen("PhaseInfo_SF.csv", "w+");
+
+    fprintf(TEST, "x,y,z,P\n");
+
+    int row, col, slice;
+
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        slice = i / (mesh->numCellsX * mesh->numCellsY);
+        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
+        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
+        fprintf(TEST, "%d,%d,%d,%1.0f\n", col, row, slice, DC[i]);
+    }
+
+    fclose(TEST);
+
+    return;
+}
 
 void SetDC_SF(float *DC, char *subDomain, meshInfo* mesh)
 {
@@ -104,28 +136,6 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     SetDC_SF(DC, subDomain, mesh);
 
-    // This is just a text
-
-    // save structure
-
-    FILE *TEST = fopen("test_structure.csv", "w+");
-
-    fprintf(TEST, "x,y,z,P\n");
-
-    for(int i = 0; i < mesh->nElements; i++)
-    {
-        int row, col, slice;
-        slice = i / (mesh->numCellsX * mesh->numCellsY);
-        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
-        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
-        fprintf(TEST, "%d,%d,%d,%1.0f\n", col, row, slice, DC[i]);
-    }
-
-    fclose(TEST);
-
-    return 1;
-
-
     // allocate the arrays for simulation
 
     float *CoeffMatrix = (float *)malloc(mesh->nElements * 7 * sizeof(float));
@@ -138,30 +148,24 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     memset(RHS, 0, mesh->nElements * sizeof(float));
     memset(Concentration, 0, mesh->nElements * sizeof(float));
 
-    // Linear initialize the concentration
+    // Linear initialize the concentration (not needed?)
 
-    for (long int i = 0; i < mesh->nElements; i++)
-    {
-        if (DC[i] == 0)
-            continue;
-        int slice = i / (mesh->numCellsX * mesh->numCellsY);
-        int row = (i - slice * mesh->numCellsX * mesh->numCellsY)/mesh->numCellsX;
-        int col = i - slice * mesh->numCellsX * mesh->numCellsY - row * mesh->numCellsX;
-        Concentration[i] = ((float)col / mesh->numCellsX) * (opts->CRight - opts->CLeft) + opts->CLeft;
-    }
+    // for (long int i = 0; i < mesh->nElements; i++)
+    // {
+    //     if (DC[i] == 0)
+    //         continue;
+    //     int slice = i / (mesh->numCellsX * mesh->numCellsY);
+    //     int row = (i - slice * mesh->numCellsX * mesh->numCellsY)/mesh->numCellsX;
+    //     int col = i - slice * mesh->numCellsX * mesh->numCellsY - row * mesh->numCellsX;
+    //     Concentration[i] = ((float)col / mesh->numCellsX) * (opts->CRight - opts->CLeft) + opts->CLeft;
+    // }
 
     // Discretize
 
     if(opts->verbose)
         printf("Discretizing\n");
 
-    if (opts->PB)
-    {
-        Disc3D_TauPB(opts, mesh, DC, CoeffMatrix, RHS);
-    } else
-    {
-        Disc3D_Tau(opts, mesh, DC, CoeffMatrix, RHS);
-    }
+    Disc3D_SF_PB(opts, mesh, DC, CoeffMatrix, RHS);
 
     // Solve
 
@@ -169,15 +173,39 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     if(opts->useGPU)
     {
-        errorFlag = gpuHandler(opts, mesh, save, Concentration, CoeffMatrix, RHS);
-        if(errorFlag)
-            return 1;
+    //     errorFlag = gpuHandler(opts, mesh, save, Concentration, CoeffMatrix, RHS);
+    //     if(errorFlag)
+    //         return 1;
+    // }
+    // else
+    // {
+    //     // cpuSolve
+    //     pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Concentration);
+        printf("GPU not currently Supported. Using CPU instead.\n");
     }
-    else
+
+    // CPU solve
+    pGS3D_SF_handle(opts, mesh, save, CoeffMatrix, RHS, Concentration);
+
+    // save to see temperatures calculated
+
+    FILE *TEST = fopen("TempInfo_SF.csv", "w+");
+
+    fprintf(TEST, "x,y,z,T\n");
+
+    int row, col, slice;
+
+    for(int i = 0; i < mesh->nElements; i++)
     {
-        // cpuSolve
-        pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Concentration);
+        slice = i / (mesh->numCellsX * mesh->numCellsY);
+        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
+        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
+        fprintf(TEST, "%d,%d,%d,%1.3f\n", col, row, slice, Concentration[i]);
     }
+
+    fclose(TEST);
+
+    return 1;
 
     // Calculate Tortuosity
 

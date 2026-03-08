@@ -15,7 +15,6 @@ Andre Adam
 #include <data_structures.hpp>
 #include <output.hpp>
 #include <cpu_solvers/cpuSolvers.hpp>
-#include <Disc3D_SF_PB.hpp>
 
 #ifdef USE_CUDA
     #include <cuda_solvers/gpuSolve.cu>
@@ -24,6 +23,12 @@ Andre Adam
 #ifndef USE_CUDA
     #include <cpu_solvers/cpuErrorHandler.hpp>
 #endif
+
+/*
+
+Legacy/Debug Functions
+
+*/
 
 void saveDC_SF(float *DC, meshInfo* mesh)
 {
@@ -55,6 +60,43 @@ void saveDC_SF(float *DC, meshInfo* mesh)
 
     return;
 }
+
+void saveTemp_SF(float *Concentration, meshInfo* mesh)
+{
+    /*
+        Function saveTemp_SF:
+
+        This is a function to save temperatures in the shape factor simulation.
+
+        Function not called anywhere, just here for debugging.
+    */
+
+    // save to see temperatures calculated
+
+    FILE *TEST = fopen("TempInfo_SF.csv", "w+");
+
+    fprintf(TEST, "x,y,z,T\n");
+
+    int row, col, slice;
+
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        slice = i / (mesh->numCellsX * mesh->numCellsY);
+        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
+        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
+        fprintf(TEST, "%d,%d,%d,%1.3f\n", col, row, slice, Concentration[i]);
+    }
+
+    fclose(TEST);
+
+    return;
+}
+
+/*
+
+    Discretization Functions
+
+*/
 
 void SetDC_SF(float *DC, char *subDomain, meshInfo* mesh)
 {
@@ -88,6 +130,411 @@ void SetDC_SF(float *DC, char *subDomain, meshInfo* mesh)
 
     return;
 }
+
+int Disc3D_SF_PB(options *opts,
+               meshInfo *mesh,
+               float *DC,
+               float *CoeffMatrix,
+               float *RHS)
+{
+    /*
+        Function Disc3D_SF_PB:
+        Inputs:
+            - pointer to options data structure
+            - pointer to mesh data structure
+            - pointer to float array DC holding diffusion coefficients
+            - pointer to float array CoeffMatrix Coefficient Matrix
+            - pointer to float array RHS holding right-hand side of discretized system.
+        Output:
+            - none.
+
+        Function creates a discretization for a simulation of shape factor. It will populate the
+        Coefficient Matrix array and the RHS array (where BC's are held). This version is
+        for periodic BCs. Each element boundary has three BC options: 
+
+        1. Participating media
+        2. First channel BC (T=T_high)
+        3. Second Channel BC (T=T_low)
+    */
+
+    // Set necessary variables
+
+    int nCols, nRows, nSlices;
+    nCols = mesh->numCellsX;
+    nRows = mesh->numCellsY;
+    nSlices = mesh->numCellsZ;
+
+    float dx, dy, dz;
+    dx = mesh->dx;
+    dy = mesh->dy;
+    dz = mesh->dz;
+
+    int row, col, slice;
+    float dw, de, ds, dn, db, df;
+
+    for (long int i = 0; i < mesh->nElements; i++)
+    {
+        // dissolve index into rows and cols
+        slice = i / (nRows * nCols);
+        row = (i - slice * nRows * nCols) / nCols;
+        col = (i - slice * nRows * nCols - row * nCols);
+
+        // make sure CoeffMatrix and RHS are zero
+
+        RHS[i] = 0;
+        for (int k = 0; k < 7; k++)
+        {
+            CoeffMatrix[i * 7 + k] = 0;
+        }
+
+        /*
+            Correct for non-participating media, analogous to
+            pressure-decoupled solid velocity correction:
+            https://doi.org/10.1016/j.ijheatmasstransfer.2009.12.057
+        */
+
+        if (DC[i] != 1)
+        {
+            // 1 * phi = 0;
+            CoeffMatrix[i * 7 + 0] = 1;
+            RHS[i] = 0;
+            continue;
+        }
+
+        // Participating fluid
+
+        /*
+            Indexing for coeff marix:
+
+            0 : P       i
+            1 : W       i - 1
+            2 : E       i + 1
+            3 : S       i + nCols
+            4 : N       i - nCols
+            5 : B       i + nRows * nCols
+            6 : F       i - nRows * nCols
+        */
+
+        // West
+
+        if (col == 0)
+        {
+            // Periodic Boundary
+            if (DC[i - 1 + nCols] == 1) 
+            {
+            // Left boundary, participating media
+            dw = DC[i];
+            CoeffMatrix[i * 7 + 2] = dw * (dy * dz) / dx;
+            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / dx;
+            }
+            else if (DC[i - 1 + nCols] == 2)
+            {
+            // Left boundary, first channel
+            dw = DC[i];
+            RHS[i] -= opts->CLeft * dw * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+            }
+            else if (DC[i - 1 + nCols] == 3)
+            {
+            // Left boundary, second channel
+            dw = DC[i];
+            RHS[i] -= opts->CRight * dw * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+            }
+        } else  
+        {
+            // Non-Boundary Neighbor
+            if (DC[i - 1] == 1)
+            {
+            // West is participating media
+            dw = DC[i];
+            CoeffMatrix[i * 7 + 1] = dw * (dy * dz) / dx;
+            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / dx;
+            }
+            else if (DC[i - 1] == 2)
+            {
+            // West is first channel
+            dw = DC[i];
+            RHS[i] -= opts->CLeft * dw * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+            }
+            else if (DC[i - 1] == 3)
+            {
+            // West is second channel
+            dw = DC[i];
+            RHS[i] -= opts->CRight * dw * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+            }
+        }
+
+        // East
+
+        if (col == mesh->numCellsX - 1)
+        {
+            // Periodic Boundary
+            if (DC[i + 1 - nCols] == 1)
+            {
+            // Right boundary, participating media
+            de = DC[i];
+            CoeffMatrix[i * 7 + 2] = de * (dy * dz) / (dx);
+            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx);
+            }
+            else if (DC[i + 1 - nCols] == 2)
+            {
+            // Right boundary, first channel
+            de = DC[i];
+            RHS[i] -= opts->CLeft * de * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+            }
+            if (DC[i + 1 - nCols] == 3)
+            {
+            // Right boundary, second channel
+            de = DC[i];
+            RHS[i] -= opts->CRight * de * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+            }
+        } else 
+        {
+            // Non-Boundary Neighbor
+            if (DC[i + 1] == 1)
+            {
+            // East, participating media
+            de = DC[i];
+            CoeffMatrix[i * 7 + 2] = de * (dy * dz) / (dx);
+            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx);
+            }
+            else if (DC[i + 1] == 2)
+            {
+            // East, first channel
+            de = DC[i];
+            RHS[i] -= opts->CLeft * de * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+            }
+            if (DC[i + 1] == 3)
+            {
+            // East, second channel
+            de = DC[i];
+            RHS[i] -= opts->CRight * de * (dy * dz) / (dx / 2);
+            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+            }
+        }
+
+        // South
+
+        if (row != mesh->numCellsY - 1)
+        {
+            // Non-Boundary Neighbor
+            if (DC[i + nCols] == 1)
+            {
+                // South, participating
+                ds = DC[i];
+                CoeffMatrix[i * 7 + 3] = ds * (dx * dz) / dy;
+                CoeffMatrix[i * 7 + 0] -= ds * (dx * dz) / dy;
+            }
+            else if (DC[i + nCols] == 2)
+            {
+                // South, first channel
+                ds = DC[i];
+                RHS[i] -= opts->CLeft * ds * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= ds * (dx * dz) / (dy / 2);
+            }
+            else if (DC[i + nCols] == 3)
+            {
+                // South, second channel
+                ds = DC[i];
+                RHS[i] -= opts->CRight * ds * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= ds * (dx * dz) / (dy / 2);
+            }
+        } else
+        {
+            // Periodic Boundary
+            if (DC[slice * nCols * nRows + col] == 1) //Periodic Boundary
+            {
+                // South, participating
+                ds = DC[i];
+                CoeffMatrix[i * 7 + 3] = ds * (dx * dz) / dy;
+                CoeffMatrix[i * 7 + 0] -= ds * (dx *dz) / dy;
+            }
+            else if (DC[slice * nCols * nRows + col] == 2)
+            {
+                // South, first channel
+                ds = DC[i];
+                RHS[i] -= opts->CLeft * ds * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= ds * (dx *dz) / (dy / 2);
+            }
+            else if (DC[slice * nCols * nRows + col] == 3)
+            {
+                // South, second channel
+                ds = DC[i];
+                RHS[i] -= opts->CRight * ds * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= ds * (dx *dz) / (dy / 2);
+            }
+        }
+
+        // North
+
+        if (row != 0)
+        {
+            // Non-Boundary Neighbor
+            if (DC[i - nCols] == 1)
+            {
+                // North, participating media
+                dn = DC[i];
+                CoeffMatrix[i * 7 + 4] = dn * (dx * dz) / dy;
+                CoeffMatrix[i * 7 + 0] -= dn * (dx * dz) / dy;
+            }
+            else if (DC[i - nCols] == 2)
+            {
+                // North, first channel
+                dn = DC[i];
+                RHS[i] -= opts->CLeft * dn * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= dn * (dx * dz) / (dy / 2);
+            }
+            else if (DC[i - nCols] == 3)
+            {
+                // North, second channel
+                dn = DC[i];
+                RHS[i] -= opts->CRight * dn * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= dn * (dx * dz) / (dy / 2);
+            }
+        } else
+        {
+            // Periodic Boundary
+            if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 1) 
+            {
+                //North, participating media
+                dn = DC[i];
+                CoeffMatrix[i * 7 + 4] = dn * (dx * dz) / dy;
+                CoeffMatrix[i * 7 + 0] -= dn * (dx * dz) / dy;
+            } else if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 2)
+            {
+                // North, first channel
+                dn = DC[i];
+                RHS[i] -= opts->CLeft * dn * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= dn * (dx * dz) / (dy / 2);
+            } else if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 3)
+            {
+                // North, second channel
+                dn = DC[i];
+                RHS[i] -= opts->CRight * dn * (dx * dz) / (dy / 2);
+                CoeffMatrix[i * 7 + 0] -= dn * (dx * dz) / (dy / 2);
+            }
+        }
+
+        // Back
+
+        if (slice != mesh->numCellsZ - 1)
+        {
+            // Non-Boundary Neighbor
+            if (DC[i + nCols * nRows] == 1)
+            {
+                // Back, participating media
+                db = DC[i];
+                CoeffMatrix[i * 7 + 5] = db * (dx * dy) / dz;
+                CoeffMatrix[i * 7 + 0] -= db * (dx * dy) / dz;
+            }
+            else if (DC[i + nCols * nRows] == 2)
+            {
+                // Back, first channel
+                db = DC[i];
+                RHS[i] -= opts->CLeft * db * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= db * (dx * dy) / (dz / 2);
+            }
+            else if (DC[i + nCols * nRows] == 3)
+            {
+                // Back, second channel
+                db = DC[i];
+                RHS[i] -= opts->CRight * db * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= db * (dx * dy) / (dz / 2);
+            }
+        } else
+        {
+            //Periodic Boundary
+            if (DC[row * nCols + col] == 1)
+            {
+                // Back, participating media
+                db = DC[i];
+                CoeffMatrix[i * 7 + 5] = db * (dx * dy) / dz;
+                CoeffMatrix[i * 7 + 0] -= db * (dx * dy) / dz;
+            }
+            else if (DC[row * nCols + col] == 2)
+            {
+                // Periodic Back
+                db = DC[i];
+                RHS[i] -= opts->CLeft * db * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= db * (dx * dy) / (dz / 2);
+            }
+            else if (DC[row * nCols + col] == 3)
+            {
+                // Periodic Back
+                db = DC[i];
+                RHS[i] -= opts->CRight * db * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= db * (dx * dy) / (dz / 2);
+            }
+        }
+
+        // Front
+
+        if (slice != 0)
+        {
+            // Non-Boundary Neighbor
+            if (DC[i - nCols * nRows] == 1)
+            {
+                // Front, participating media
+                df = DC[i];
+                CoeffMatrix[i * 7 + 6] = df * (dx * dy) / dz;
+                CoeffMatrix[i * 7 + 0] -= df * (dx * dy) / dz;
+            }
+            else if (DC[i - nCols * nRows] == 2)
+            {
+                // Front, first channel
+                df = DC[i];
+                RHS[i] -= opts->CLeft * df * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= df * (dx * dy) / (dz / 2);
+            }
+            else if (DC[i - nCols * nRows] == 3)
+            {
+                // Front, second channel
+                df = DC[i];
+                RHS[i] -= opts->CRight * df * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= df * (dx * dy) / (dz / 2);
+            }
+        }
+        else
+        {
+            // Periodic Boundary
+            if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 1)
+            {
+                // Front, participating media
+                db = DC[i];
+                CoeffMatrix[i * 7 + 6] = db * (dx * dy) / dz;
+                CoeffMatrix[i * 7 + 0] -= db * (dx * dy) / dz;
+            }
+            else if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                // Front, first channel
+                df = DC[i];
+                RHS[i] -= opts->CLeft * df * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= df * (dx * dy) / (dz / 2);
+            }
+            else if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                // Front, second channel
+                df = DC[i];
+                RHS[i] -= opts->CRight * df * (dx * dy) / (dz / 2);
+                CoeffMatrix[i * 7 + 0] -= df * (dx * dy) / (dz / 2);
+            }
+        }
+    }
+
+    return 0;
+}
+
+/*
+
+    Simulation Control Function
+
+*/
 
 int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDomain)
 {
@@ -146,19 +593,14 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     memset(CoeffMatrix, 0, sizeof(float) * 7 * mesh->nElements);
     memset(RHS, 0, mesh->nElements * sizeof(float));
+
+    // Initializing to CLeft, still converges fast
     memset(Concentration, 0, mesh->nElements * sizeof(float));
-
-    // Linear initialize the concentration (not needed?)
-
-    // for (long int i = 0; i < mesh->nElements; i++)
-    // {
-    //     if (DC[i] == 0)
-    //         continue;
-    //     int slice = i / (mesh->numCellsX * mesh->numCellsY);
-    //     int row = (i - slice * mesh->numCellsX * mesh->numCellsY)/mesh->numCellsX;
-    //     int col = i - slice * mesh->numCellsX * mesh->numCellsY - row * mesh->numCellsX;
-    //     Concentration[i] = ((float)col / mesh->numCellsX) * (opts->CRight - opts->CLeft) + opts->CLeft;
-    // }
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        if(DC[i] == 1)
+            Concentration[i] = opts->CLeft;
+    }
 
     // Discretize
 
@@ -170,6 +612,10 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     // Solve
 
     bool errorFlag = 0;
+
+    /*
+        Code runs fast on CPU, I won't implement GPU support for now.
+    */
 
     if(opts->useGPU)
     {
@@ -187,145 +633,9 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     // CPU solve
     pGS3D_SF_handle(opts, mesh, save, CoeffMatrix, RHS, Concentration);
 
-    // save to see temperatures calculated
+    // Calculate SF
 
-    FILE *TEST = fopen("TempInfo_SF.csv", "w+");
-
-    fprintf(TEST, "x,y,z,T\n");
-
-    int row, col, slice;
-
-    for(int i = 0; i < mesh->nElements; i++)
-    {
-        slice = i / (mesh->numCellsX * mesh->numCellsY);
-        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
-        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
-        fprintf(TEST, "%d,%d,%d,%1.3f\n", col, row, slice, Concentration[i]);
-    }
-
-    fclose(TEST);
-
-    return 1;
-
-    // Calculate Tortuosity
-
-    double Q1 = 0;
-    double Q2 = 0;
-    int right = mesh->numCellsX - 1;
-    int left = 0;
-
-    for (int k = 0; k < mesh->numCellsZ; k++)
-    {
-        for (int i = 0; i < mesh->numCellsY; i++)
-        {
-            long int indexL = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + left;
-            long int indexR = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + right;
-            Q1 += DC[indexL] * (Concentration[indexL] - opts->CLeft) / (mesh->dx / 2);
-            Q2 += DC[indexR] * (opts->CRight - Concentration[indexR]) / (mesh->dx / 2);
-        }
-    }
-
-    double qAvg = (Q1 + Q2) / (2.0 * mesh->numCellsY * mesh->numCellsZ);
-
-    int POI = 1;
-
-    if (POI == 0)
-    {
-        // get effective porosity
-        size_t count = 0;
-        for(long int i = 0; i < mesh->nElements; i++)
-        {
-            if (DC[i] != 0)
-                count++;
-        }
-
-        save->ePore = (float) count / mesh->nElements;
-
-        // Calculate tortuosity
-
-        save->Deff_TH_MAX = save->ePore;
-        save->Deff = qAvg / (opts->CRight - opts->CLeft);
-        save->Tau = save->Deff_TH_MAX / save->Deff;
-
-        if (opts->verbose == 1)
-        {
-            printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
-                   save->porosity, save->Deff_TH_MAX, save->Deff, save->Tau);
-        }
-        // print CMAP if needed
-        if(opts->CMAP)
-        {
-            char out_end[] = "_TauF.csv";
-            char filename[200];
-            strcpy(filename, opts->CMAP_Name);
-            strncat(filename, out_end, 100);
-            printCMAP(opts, mesh, filename, Concentration, P, 0);
-        }
-        if(opts->subOut)
-        {
-            for (int sub = 1; sub <= mesh->nChannels; sub++)
-            {
-                // skip if not fully connected
-                if (mesh->sdInfo[sub - 1].FC == 0)
-                    continue;
-
-                // calculate local fluxes
-                Q1 = 0;
-                Q2 = 0;
-                for (int k = 0; k < mesh->numCellsZ; k++)
-                {
-                    for (int i = 0; i < mesh->numCellsY; i++)
-                    {
-                        long int indexL = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + left;
-                        long int indexR = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + right;
-                        if (subDomain[indexL] == sub)
-                            Q1 += DC[indexL] * (Concentration[indexL] - opts->CLeft) / (mesh->dx / 2);
-                        if (subDomain[indexR] == sub)
-                            Q2 += DC[indexR] * (opts->CRight - Concentration[indexR]) / (mesh->dx / 2);
-                    }
-                }
-                // calculate avg flux and tau
-                qAvg = (Q1 + Q2) / (2.0 * mesh->numCellsY * mesh->numCellsZ);
-                float D_TH_MAX = mesh->sdInfo[sub - 1].VF;
-                float Deff = qAvg / (opts->CRight - opts->CLeft);
-                mesh->sdInfo[sub - 1].Tau = D_TH_MAX / Deff;
-                // print
-                if (opts->verbose)
-                    printf("sub = %d, VF = %1.3f, Tau = %1.3f\n", sub, mesh->sdInfo[sub - 1].VF, mesh->sdInfo[sub - 1].Tau);
-                // print CMAP if needed
-                if (opts->CMAP)
-                {
-                    char out_end[100];
-                    sprintf(out_end, "TauSub%d.csv", sub);
-                    char filename[200];
-                    strcpy(filename, opts->CMAP_Name);
-                    strncat(filename, out_end, 100);
-                    printCMAP(opts, mesh, filename, Concentration, subDomain, sub);
-                }
-            }
-        }
-    }
-    else if (POI == 1)
-    {
-        save->Deff_TH_MAX = save->SVF;
-        save->Deff = qAvg / (opts->CRight - opts->CLeft);
-        save->TauSolid = save->Deff_TH_MAX / save->Deff;
-
-        if (opts->verbose == 1)
-        {
-            printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
-                   save->SVF, save->Deff_TH_MAX, save->Deff, save->TauSolid);
-        }
-        // print CMAP if needed
-        if (opts->CMAP)
-        {
-            char out_end[] = "_TauS.csv";
-            char filename[200];
-            strcpy(filename, opts->CMAP_Name);
-            strncat(filename, out_end, 100);
-            printCMAP(opts, mesh, filename, Concentration, P, 1);
-        }
-    }
+    
 
     return 0;
 }

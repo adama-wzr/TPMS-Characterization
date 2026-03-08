@@ -83,9 +83,12 @@ This research used resources of the Compute and Data Environment for Science (CA
 
 # Upcoming Changes
 
-**01/16/2026 Update** -> New changes will be made on a development branch. Only stable code will be in the main branch.
+**03/07/2026 Update** -> New changes will be made on a development branch, starting with a shape factor addition to the code.
+
+- Look out for the publication! It should be coming soon!
 
 - Additional capabilities are planned:
-    - Built-in convergence assessment.
-    - UI for navigating data and creating input files (maybe).
     - Code documentation.
+    - More characterization capabilities.
+    - A UI for managing input file and desired outputs.
+    - Better Windows compatibility    

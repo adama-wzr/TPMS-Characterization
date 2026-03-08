@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     mesh.sdInfo = (subDinfo *)malloc(sizeof(subDinfo) * mesh.nChannels);
 
     // Fully-Connected or not?
-
+    
     subDomainFC(&mesh, subDomains);
 
     /*
@@ -108,10 +108,12 @@ int main(int argc, char **argv)
     if (opts.Tau_s)
         errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 1);
 
+    // Shape Factors
+
     if (opts.runSF)
     {
         printf("Checking that files exist\n");
-        
+
     }
 
     if(errorFlag)

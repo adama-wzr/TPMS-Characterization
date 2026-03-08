@@ -24,26 +24,34 @@ Andre Adam
     #include <cpu_solvers/cpuErrorHandler.hpp>
 #endif
 
-void SetDC_Tau(float *DC, char *P, meshInfo* mesh, int POI)
+void SetDC_SF(float *DC, char *subDomain, meshInfo* mesh)
 {
     /*
         Function SetDC_Tau:
         
         Inputs:
             - pointer DC, array holding diffusion coefficients
-            - pointer to P, array holding the structure.
+            - pointer to subDomain, array holding the structure's subdomain information.
             - pointer to struct holding the mesh info array.
             - integer POI (phase of interest)
         Outputs: 
             - None.
         
-        Function will populate the DC array with diffusion coefficients.
+        Function will populate the DC array with correct index for Shape Factor simulation.
+
+        1. Participating media
+        2. First channel BC (T=T_high)
+        3. Second Channel BC (T=T_low)
     */
 
     for (int i = 0; i < mesh->nElements; i++)
     {
-        if (P[i] == POI)
-            DC[i] = 1.0;
+        if (subDomain[i] == 0)
+            DC[i] = 1;
+        else if(subDomain[i] == 1)
+            DC[i] = 2;
+        else if(subDomain[i] == 2)
+            DC[i] = 3;
     }
 
     return;
@@ -873,10 +881,10 @@ int Disc3D_TauPB(options *opts,
     return 0;
 }
 
-int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDomain, int POI)
+int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDomain)
 {
     /*
-        Function Tau3D_Sim:
+        Function SF_Sim3D:
         
         Inputs:
             - pointer to struct options
@@ -884,7 +892,6 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
             - pointer to save struct
             - pointer to array holding the structure, P.
             - pointer to subDomain array
-            - integer POI, phase of intereset
         Outputs:
             - None.
         
@@ -902,19 +909,40 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     memset(DC, 0 , mesh->nElements * sizeof(float));
 
+    // Sub-Domain Info is absolutely necessary for this simulation
+
+    if(mesh->nChannels != 2 || mesh->nFC != 2)
+    {
+        printf("Error Detected: nChannels = %d, nFC = %d\n", mesh->nChannels, mesh->nFC);
+        printf("Returning.....");
+        return 1;
+    }
+
     // Populate the array based on the structure
 
-    SetDC_Tau(DC, P, mesh, POI);
+    SetDC_SF(DC, subDomain, mesh);
 
-    // Find participating media, this will remove cutoff channels
+    // This is just a text
 
-    if (opts->verbose)
-        printf("Flood Fill\n");
+    // save structure
 
-    if (opts->PB)
-        FloodFill3D_PB(mesh, DC);
-    else
-        FloodFill3D(mesh, DC);
+    FILE *TEST = fopen("test_structure.csv", "w+");
+
+    fprintf(TEST, "x,y,z,P\n");
+
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        int row, col, slice;
+        slice = i / (mesh->numCellsX * mesh->numCellsY);
+        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
+        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
+        fprintf(TEST, "%d,%d,%d,%1.0f\n", col, row, slice, DC[i]);
+    }
+
+    fclose(TEST);
+
+    return 1;
+
 
     // allocate the arrays for simulation
 
@@ -989,105 +1017,105 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     double qAvg = (Q1 + Q2) / (2.0 * mesh->numCellsY * mesh->numCellsZ);
 
-    if (POI == 0)
-    {
-        // get effective porosity
-        size_t count = 0;
-        for(long int i = 0; i < mesh->nElements; i++)
-        {
-            if (DC[i] != 0)
-                count++;
-        }
+//     if (POI == 0)
+//     {
+//         // get effective porosity
+//         size_t count = 0;
+//         for(long int i = 0; i < mesh->nElements; i++)
+//         {
+//             if (DC[i] != 0)
+//                 count++;
+//         }
 
-        save->ePore = (float) count / mesh->nElements;
+//         save->ePore = (float) count / mesh->nElements;
 
-        // Calculate tortuosity
+//         // Calculate tortuosity
 
-        save->Deff_TH_MAX = save->ePore;
-        save->Deff = qAvg / (opts->CRight - opts->CLeft);
-        save->Tau = save->Deff_TH_MAX / save->Deff;
+//         save->Deff_TH_MAX = save->ePore;
+//         save->Deff = qAvg / (opts->CRight - opts->CLeft);
+//         save->Tau = save->Deff_TH_MAX / save->Deff;
 
-        if (opts->verbose == 1)
-        {
-            printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
-                   save->porosity, save->Deff_TH_MAX, save->Deff, save->Tau);
-        }
-        // print CMAP if needed
-        if(opts->CMAP)
-        {
-            char out_end[] = "_TauF.csv";
-            char filename[200];
-            strcpy(filename, opts->CMAP_Name);
-            strncat(filename, out_end, 100);
-            printCMAP(opts, mesh, filename, Concentration, P, 0);
-        }
-        if(opts->subOut)
-        {
-            for (int sub = 1; sub <= mesh->nChannels; sub++)
-            {
-                // skip if not fully connected
-                if (mesh->sdInfo[sub - 1].FC == 0)
-                    continue;
+//         if (opts->verbose == 1)
+//         {
+//             printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
+//                    save->porosity, save->Deff_TH_MAX, save->Deff, save->Tau);
+//         }
+//         // print CMAP if needed
+//         if(opts->CMAP)
+//         {
+//             char out_end[] = "_TauF.csv";
+//             char filename[200];
+//             strcpy(filename, opts->CMAP_Name);
+//             strncat(filename, out_end, 100);
+//             printCMAP(opts, mesh, filename, Concentration, P, 0);
+//         }
+//         if(opts->subOut)
+//         {
+//             for (int sub = 1; sub <= mesh->nChannels; sub++)
+//             {
+//                 // skip if not fully connected
+//                 if (mesh->sdInfo[sub - 1].FC == 0)
+//                     continue;
 
-                // calculate local fluxes
-                Q1 = 0;
-                Q2 = 0;
-                for (int k = 0; k < mesh->numCellsZ; k++)
-                {
-                    for (int i = 0; i < mesh->numCellsY; i++)
-                    {
-                        long int indexL = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + left;
-                        long int indexR = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + right;
-                        if (subDomain[indexL] == sub)
-                            Q1 += DC[indexL] * (Concentration[indexL] - opts->CLeft) / (mesh->dx / 2);
-                        if (subDomain[indexR] == sub)
-                            Q2 += DC[indexR] * (opts->CRight - Concentration[indexR]) / (mesh->dx / 2);
-                    }
-                }
-                // calculate avg flux and tau
-                qAvg = (Q1 + Q2) / (2.0 * mesh->numCellsY * mesh->numCellsZ);
-                float D_TH_MAX = mesh->sdInfo[sub - 1].VF;
-                float Deff = qAvg / (opts->CRight - opts->CLeft);
-                mesh->sdInfo[sub - 1].Tau = D_TH_MAX / Deff;
-                // print
-                if (opts->verbose)
-                    printf("sub = %d, VF = %1.3f, Tau = %1.3f\n", sub, mesh->sdInfo[sub - 1].VF, mesh->sdInfo[sub - 1].Tau);
-                // print CMAP if needed
-                if (opts->CMAP)
-                {
-                    char out_end[100];
-                    sprintf(out_end, "TauSub%d.csv", sub);
-                    char filename[200];
-                    strcpy(filename, opts->CMAP_Name);
-                    strncat(filename, out_end, 100);
-                    printCMAP(opts, mesh, filename, Concentration, subDomain, sub);
-                }
-            }
-        }
-    }
-    else if (POI == 1)
-    {
-        save->Deff_TH_MAX = save->SVF;
-        save->Deff = qAvg / (opts->CRight - opts->CLeft);
-        save->TauSolid = save->Deff_TH_MAX / save->Deff;
+//                 // calculate local fluxes
+//                 Q1 = 0;
+//                 Q2 = 0;
+//                 for (int k = 0; k < mesh->numCellsZ; k++)
+//                 {
+//                     for (int i = 0; i < mesh->numCellsY; i++)
+//                     {
+//                         long int indexL = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + left;
+//                         long int indexR = k * mesh->numCellsX * mesh->numCellsY + i * mesh->numCellsX + right;
+//                         if (subDomain[indexL] == sub)
+//                             Q1 += DC[indexL] * (Concentration[indexL] - opts->CLeft) / (mesh->dx / 2);
+//                         if (subDomain[indexR] == sub)
+//                             Q2 += DC[indexR] * (opts->CRight - Concentration[indexR]) / (mesh->dx / 2);
+//                     }
+//                 }
+//                 // calculate avg flux and tau
+//                 qAvg = (Q1 + Q2) / (2.0 * mesh->numCellsY * mesh->numCellsZ);
+//                 float D_TH_MAX = mesh->sdInfo[sub - 1].VF;
+//                 float Deff = qAvg / (opts->CRight - opts->CLeft);
+//                 mesh->sdInfo[sub - 1].Tau = D_TH_MAX / Deff;
+//                 // print
+//                 if (opts->verbose)
+//                     printf("sub = %d, VF = %1.3f, Tau = %1.3f\n", sub, mesh->sdInfo[sub - 1].VF, mesh->sdInfo[sub - 1].Tau);
+//                 // print CMAP if needed
+//                 if (opts->CMAP)
+//                 {
+//                     char out_end[100];
+//                     sprintf(out_end, "TauSub%d.csv", sub);
+//                     char filename[200];
+//                     strcpy(filename, opts->CMAP_Name);
+//                     strncat(filename, out_end, 100);
+//                     printCMAP(opts, mesh, filename, Concentration, subDomain, sub);
+//                 }
+//             }
+//         }
+//     }
+//     else if (POI == 1)
+//     {
+//         save->Deff_TH_MAX = save->SVF;
+//         save->Deff = qAvg / (opts->CRight - opts->CLeft);
+//         save->TauSolid = save->Deff_TH_MAX / save->Deff;
 
-        if (opts->verbose == 1)
-        {
-            printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
-                   save->SVF, save->Deff_TH_MAX, save->Deff, save->TauSolid);
-        }
-        // print CMAP if needed
-        if (opts->CMAP)
-        {
-            char out_end[] = "_TauS.csv";
-            char filename[200];
-            strcpy(filename, opts->CMAP_Name);
-            strncat(filename, out_end, 100);
-            printCMAP(opts, mesh, filename, Concentration, P, 1);
-        }
-    }
+//         if (opts->verbose == 1)
+//         {
+//             printf("VF = %1.3lf, DeffMax = %1.3e, Deff = %1.3e, Tau = %1.3e\n",
+//                    save->SVF, save->Deff_TH_MAX, save->Deff, save->TauSolid);
+//         }
+//         // print CMAP if needed
+//         if (opts->CMAP)
+//         {
+//             char out_end[] = "_TauS.csv";
+//             char filename[200];
+//             strcpy(filename, opts->CMAP_Name);
+//             strncat(filename, out_end, 100);
+//             printCMAP(opts, mesh, filename, Concentration, P, 1);
+//         }
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 #endif

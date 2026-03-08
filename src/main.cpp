@@ -13,6 +13,7 @@ Andre Adam
 #include <lib/surfaceArea.hpp>
 #include <lib/TauSim.hpp>
 #include <lib/sizeDistributions.hpp>
+#include <lib/sfSim.hpp>
 #include <lib/output.hpp>
 #include <subDomainFF.hpp>
 #include <math.h>
@@ -112,8 +113,7 @@ int main(int argc, char **argv)
 
     if (opts.runSF)
     {
-        printf("Checking that files exist\n");
-
+        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
     }
 
     if(errorFlag)

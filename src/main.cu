@@ -26,6 +26,7 @@ Andre Adam
 #include <lib/surfaceArea.hpp>
 #include <lib/TauSim.hpp>
 #include <lib/sizeDistributions.hpp>
+#include <lib/sfSim.hpp>
 #include <lib/output.hpp>
 #include <subDomainFF.hpp>
 #include <math.h>
@@ -125,6 +126,13 @@ int main(int argc, char **argv)
     if(errorFlag)
         return 1;
     
+    // Shape Factors
+
+    if (opts.runSF)
+    {
+        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
+    }
+
     /*
     
         Size - Distributions:

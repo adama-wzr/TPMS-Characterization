@@ -68,7 +68,7 @@ if (UNIX)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         target_link_libraries(TPMS-Characterization-CPU PRIVATE OpenMP::OpenMP_CXX)
         target_compile_features(TPMS-Characterization-CPU PUBLIC cxx_std_17)
-    endif(CUDA)
+    endif()
 
 endif (UNIX)
 

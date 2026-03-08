@@ -1,10 +1,10 @@
-OutputName: SchwarzP_mesh.csv
+OutputName: Test_SF.csv
 isoValue: 0.3
 nVoxels: 100
 TPMS: 3
 Verbose: 1
-TauS: 1
-TauF: 1
+TauS: 0
+TauF: 0
 CMAP: test
 pb: 1
 Convergence: 1e-6
@@ -13,10 +13,10 @@ partSD: 0
 poreSD: 0
 poreSDOut: poreSD.csv
 partSDOut: partSD.csv
-printSD: 1
+printSD: 0
 nThreads: 8
-useGPU: 1
+useGPU: 0
 numGPU: 1
 runSA: 0
 subOut: 1
-runSF: 0
+runSF: 1

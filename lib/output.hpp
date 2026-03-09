@@ -1,5 +1,3 @@
-
-
 #ifndef __OUT
 #define __OUT
 

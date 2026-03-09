@@ -418,7 +418,7 @@ int pGS3D_SF_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff,
 
     // declare useful variables
     long int nIter = 0;
-    int iterToCheck = 1000;
+    int iterToCheck = 100;
     float conv = 1.0;
 
     // get array for comparison
@@ -455,7 +455,7 @@ int pGS3D_SF_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff,
         }
 
         // update user (if applicable)
-        if(nIter % 1000 == 0 && opts->verbose == 1)
+        if(nIter % iterToCheck == 0 && opts->verbose == 1)
         {
             printf("Iteration = %ld, pct Change = %1.3e\n", nIter, conv);
         }

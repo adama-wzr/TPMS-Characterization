@@ -109,12 +109,6 @@ int main(int argc, char **argv)
     if (opts.Tau_s)
         errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 1);
 
-    // Shape Factors
-
-    if (opts.runSF)
-    {
-        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
-    }
 
     if(errorFlag)
         return 1;
@@ -136,6 +130,13 @@ int main(int argc, char **argv)
         poreSD_3D(&opts, &mesh, &save, P, subDomains, 0);
     else
         save.pore50 = 0;
+    
+    // Shape Factors is last because it depends on others
+
+    if (opts.runSF)
+    {
+        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
+    }
 
     outputGeneral(&opts, &save, &mesh);
 

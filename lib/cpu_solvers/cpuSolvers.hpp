@@ -236,7 +236,7 @@ void pGS3D_allPB(meshInfo *mesh, float *Coeff, float *RHS, float *x_vec)
                 if(myCol == nCols - 1)
                 {
                     // Periodic East
-                    sigma += Coeff[i*7 + j] * x_vec[i - (nCols + 1)];
+                    sigma += Coeff[i*7 + j] * x_vec[i - (nCols - 1)];
                 }
                 else
                 {
@@ -425,9 +425,12 @@ int pGS3D_SF_handle(options *opts, meshInfo *mesh, saveInfo *save, float *Coeff,
     float *oldX = (float *)malloc(mesh->nElements * sizeof(float));
 
     memcpy(oldX, x_vec, sizeof(float) * mesh->nElements);
+
+    // float conv_threshold = opts->ConvergeCriteria;
+    float conv_threshold = 1e-12;
     
     // main loop
-    while(nIter < opts->MAX_ITER && conv > opts->ConvergeCriteria)
+    while(nIter < opts->MAX_ITER && conv > conv_threshold)
     {
         pGS3D_allPB(mesh, Coeff, RHS, x_vec);
     

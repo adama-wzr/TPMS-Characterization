@@ -151,6 +151,13 @@ int main(int argc, char **argv)
     else
         save.pore50 = 0;
 
+    // Shape Factors is last because it depends on others
+
+    if (opts.runSF)
+    {
+        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
+    }
+
     outputGeneral(&opts, &save, &mesh);
 
     return 0;

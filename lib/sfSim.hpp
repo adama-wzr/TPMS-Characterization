@@ -13,8 +13,11 @@ Andre Adam
 #include <math.h>
 #include <stdlib.h>
 #include <data_structures.hpp>
+#include <constants.hpp>
 #include <output.hpp>
 #include <cpu_solvers/cpuSolvers.hpp>
+#include <surfaceArea.hpp>
+#include <sizeDistributions.hpp>
 
 #ifdef USE_CUDA
     #include <cuda_solvers/gpuSolve.cu>
@@ -220,50 +223,51 @@ int Disc3D_SF_PB(options *opts,
         if (col == 0)
         {
             // Periodic Boundary
-            if (DC[i - 1 + nCols] == 1) 
+            if (DC[i - 1 + nCols] == 1)
             {
-            // Left boundary, participating media
-            dw = DC[i];
-            CoeffMatrix[i * 7 + 2] = dw * (dy * dz) / dx;
-            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / dx;
+                // Left boundary, participating media
+                dw = DC[i];
+                CoeffMatrix[i * 7 + 1] = dw * (dy * dz) / dx;
+                CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / dx;
             }
             else if (DC[i - 1 + nCols] == 2)
             {
-            // Left boundary, first channel
-            dw = DC[i];
-            RHS[i] -= opts->CLeft * dw * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+                // Left boundary, first channel
+                dw = DC[i];
+                RHS[i] -= opts->CLeft * dw * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
             }
             else if (DC[i - 1 + nCols] == 3)
             {
-            // Left boundary, second channel
-            dw = DC[i];
-            RHS[i] -= opts->CRight * dw * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+                // Left boundary, second channel
+                dw = DC[i];
+                RHS[i] -= opts->CRight * dw * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
             }
-        } else  
+        }
+        else
         {
             // Non-Boundary Neighbor
             if (DC[i - 1] == 1)
             {
-            // West is participating media
-            dw = DC[i];
-            CoeffMatrix[i * 7 + 1] = dw * (dy * dz) / dx;
-            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / dx;
+                // West is participating media
+                dw = DC[i];
+                CoeffMatrix[i * 7 + 1] = dw * (dy * dz) / dx;
+                CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / dx;
             }
             else if (DC[i - 1] == 2)
             {
-            // West is first channel
-            dw = DC[i];
-            RHS[i] -= opts->CLeft * dw * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+                // West is first channel
+                dw = DC[i];
+                RHS[i] -= opts->CLeft * dw * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
             }
             else if (DC[i - 1] == 3)
             {
-            // West is second channel
-            dw = DC[i];
-            RHS[i] -= opts->CRight * dw * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
+                // West is second channel
+                dw = DC[i];
+                RHS[i] -= opts->CRight * dw * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= dw * (dy * dz) / (dx / 2);
             }
         }
 
@@ -274,48 +278,49 @@ int Disc3D_SF_PB(options *opts,
             // Periodic Boundary
             if (DC[i + 1 - nCols] == 1)
             {
-            // Right boundary, participating media
-            de = DC[i];
-            CoeffMatrix[i * 7 + 2] = de * (dy * dz) / (dx);
-            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx);
+                // Right boundary, participating media
+                de = DC[i];
+                CoeffMatrix[i * 7 + 2] = de * (dy * dz) / (dx);
+                CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx);
             }
             else if (DC[i + 1 - nCols] == 2)
             {
-            // Right boundary, first channel
-            de = DC[i];
-            RHS[i] -= opts->CLeft * de * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+                // Right boundary, first channel
+                de = DC[i];
+                RHS[i] -= opts->CLeft * de * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
             }
             if (DC[i + 1 - nCols] == 3)
             {
-            // Right boundary, second channel
-            de = DC[i];
-            RHS[i] -= opts->CRight * de * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+                // Right boundary, second channel
+                de = DC[i];
+                RHS[i] -= opts->CRight * de * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
             }
-        } else 
+        }
+        else
         {
             // Non-Boundary Neighbor
             if (DC[i + 1] == 1)
             {
-            // East, participating media
-            de = DC[i];
-            CoeffMatrix[i * 7 + 2] = de * (dy * dz) / (dx);
-            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx);
+                // East, participating media
+                de = DC[i];
+                CoeffMatrix[i * 7 + 2] = de * (dy * dz) / (dx);
+                CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx);
             }
             else if (DC[i + 1] == 2)
             {
-            // East, first channel
-            de = DC[i];
-            RHS[i] -= opts->CLeft * de * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+                // East, first channel
+                de = DC[i];
+                RHS[i] -= opts->CLeft * de * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
             }
             if (DC[i + 1] == 3)
             {
-            // East, second channel
-            de = DC[i];
-            RHS[i] -= opts->CRight * de * (dy * dz) / (dx / 2);
-            CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
+                // East, second channel
+                de = DC[i];
+                RHS[i] -= opts->CRight * de * (dy * dz) / (dx / 2);
+                CoeffMatrix[i * 7 + 0] -= de * (dy * dz) / (dx / 2);
             }
         }
 
@@ -554,9 +559,9 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
         user entered options. All releant information is saved to struct.
     */
     
-    mesh->dx = (float) 1.0 /mesh->numCellsX;
-    mesh->dy = (float) 1.0 /mesh->numCellsY;
-    mesh->dz = (float) 1.0 /mesh->numCellsZ;
+    mesh->dx = (float) 2*PI /mesh->numCellsX;
+    mesh->dy = (float) 2*PI /mesh->numCellsY;
+    mesh->dz = (float) 2*PI /mesh->numCellsZ;
 
     int nRows, nCols, nSlices;
     nCols = mesh->numCellsX;
@@ -616,7 +621,7 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     // Solve
 
-    bool errorFlag = 0;
+    // bool errorFlag = 0;
 
     /*
         Code runs fast on CPU, I won't implement GPU support for now.
@@ -868,7 +873,36 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     float S = Q_21/(opts->CLeft - opts->CRight);
 
-    printf("S = %1.3e, Q_21 = %1.3e, Q_13 = %1.3e, Residual = %1.3e\n", S, Q_21, Q_13, fabs(Q_21 - Q_13));
+    printf("Simulation Results:\n");
+    printf("S = %1.3e, Q_21 = %1.3e, Q_13 = %1.3e, Pct. Error = %3.2f %%\n", S, Q_21, Q_13, fabs((Q_21 - Q_13)/Q_21)*100);
+
+    // Geometric Results
+    if(opts->runSA == 0)
+    {
+        SA(P, mesh, save, opts);
+    }
+
+    if(opts->partSD == 0)
+    {
+        partSD_3D(opts, mesh, save, P, 1);
+    }
+
+    // correct t50 from voxel to length
+
+    float t50 = save->part50 * 2 * PI;
+
+    // correct specific surface area (L^-1) to surface area (L^2)
+
+    float total_area = (pow((2.0 * PI), 3) * save->SA);
+    float cross_sec_area = total_area / 2;
+
+    float S_geo = cross_sec_area / t50;
+
+    printf("\n-------------------------------\n");
+    printf("Geometric Results:\n");
+    printf("S = %1.3e, SA = %1.3e, t50 = %1.3e\n", S_geo, cross_sec_area, t50);
+
+    saveTemp_SF(Concentration, mesh);
     
 
     return 0;

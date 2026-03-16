@@ -75,6 +75,8 @@ endif (UNIX)
 # Windows File (no GPU support) ------------------------------
 
 if(WIN32)
+    find_package(OpenMP REQUIRED)
+    
     set(PROJECT_SOURCES
             src/main.cpp
     )
@@ -83,6 +85,7 @@ if(WIN32)
         TPMS-Characterization
         ${PROJECT_SOURCES}
     )
+    target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
 endif(WIN32)

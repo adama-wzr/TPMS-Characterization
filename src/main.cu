@@ -125,13 +125,6 @@ int main(int argc, char **argv)
 
     if(errorFlag)
         return 1;
-    
-    // Shape Factors
-
-    if (opts.runSF)
-    {
-        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
-    }
 
     /*
     

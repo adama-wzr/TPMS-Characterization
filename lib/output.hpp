@@ -82,7 +82,7 @@ void outputGeneral(options *opts, saveInfo *save, meshInfo *mesh)
     if (headerFlag && opts->subOut)
     {
         fprintf(OUT, "Structure,nElement,iso,pore,SVF,SA,"
-                     "ePore,Tau,TauSolid,pore50,part50");
+                     "ePore,Tau,TauSolid,pore50,part50,SF");
         
         int nChannel = 0;
         for(int nSub = 1; nSub <= mesh->nChannels; nSub++)

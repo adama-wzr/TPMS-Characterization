@@ -64,13 +64,13 @@ void saveDC_SF(float *DC, meshInfo* mesh)
     return;
 }
 
-void saveTemp_SF(float *DC, float *Concentration, meshInfo* mesh)
+void saveTemp_SF(float *DC, float *Temperature, meshInfo* mesh)
 {
     /*
         Function saveTemp_SF:
         Inputs:
             - DC (array w/ diffusion coefficients)
-            - Concentration (array with temperature distributions. I know, the name...)
+            - Temperature (array with temperature distributions. I know, the name...)
             - meshInfo struct
         Outputs:
             - none
@@ -94,7 +94,7 @@ void saveTemp_SF(float *DC, float *Concentration, meshInfo* mesh)
         slice = i / (mesh->numCellsX * mesh->numCellsY);
         row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
         col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
-        fprintf(TEST, "%d,%d,%d,%1.3f\n", col, row, slice, Concentration[i]);
+        fprintf(TEST, "%d,%d,%d,%1.3f\n", col, row, slice, Temperature[i]);
     }
 
     fclose(TEST);
@@ -108,7 +108,7 @@ void saveTemp_SF(float *DC, float *Concentration, meshInfo* mesh)
 
 */
 
-void SetDC_SF(float *DC, char *subDomain, meshInfo* mesh)
+void SetDC_SF(float *DC, char *subDomain, meshInfo *mesh)
 {
     /*
         Function SetDC_Tau:
@@ -544,6 +544,267 @@ int Disc3D_SF_PB(options *opts,
 
 /*
 
+    Calculate Shape Factors:
+
+*/
+
+float Calc_Q_SF(options *opts, meshInfo *mesh, float *Temperature, float *DC)
+{
+    /*
+        Function Calc_Q_SF:
+        Inputs:
+            - opts struct
+            - mesh struct
+            - Conc array, holding SF sim solutions
+            - DC array, holding discretized sub-domain information
+        Outputs:
+            - (float) Q_avg: average heat flux in the domain
+    */
+
+    // Initialize variables
+    float Q_Avg, Q_21, Q_13;
+
+    Q_21 = 0;
+    Q_13 = 0;
+
+    int slice, row, col;
+
+    int nRows, nCols, nSlices;
+    nCols = mesh->numCellsX;
+    nRows = mesh->numCellsY;
+    nSlices = mesh->numCellsZ;
+
+    // main loop:
+
+    for (long int i = 0; i < mesh->nElements; i++)
+    {
+        // if not participating media, ignore
+        if (DC[i] != 1)
+            continue;
+
+        // get index components
+        slice = i / (mesh->numCellsX * mesh->numCellsY);
+        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
+        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
+
+        // check all faces for neighbors
+
+        if (col == 0)
+        {
+            // Periodic West
+            if (DC[i + nCols - 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+            else if (DC[i + nCols - 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+
+            // East
+            if (DC[i + 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+            else if (DC[i + 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+        }
+        else if (col == mesh->numCellsX - 1)
+        {
+            // West
+            if (DC[i - 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+            else if (DC[i - 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+
+            // Periodic East
+            if (DC[i - (mesh->numCellsX - 1)] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+            else if (DC[i - (mesh->numCellsX - 1)] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+        }
+        else
+        {
+            // West
+            if (DC[i - 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+            else if (DC[i - 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+
+            // East
+            if (DC[i + 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+            else if (DC[i + 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
+            }
+        }
+
+        if (row == 0)
+        {
+            // Periodic North
+            if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+            else if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+
+            // South
+            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+        }
+        else if (row == nRows - 1)
+        {
+            // North
+            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+
+            // Periodic South
+            if (DC[slice * nCols * nRows + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+            else if (DC[slice * nCols * nRows + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+        }
+        else
+        {
+            // North
+            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+
+            // South
+            if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+            else if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
+            }
+        }
+
+        if (slice == 0)
+        {
+            // Periodic Front
+            if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+            else if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+
+            // Back
+            if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+            else if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+        }
+        else if (slice == nSlices - 1)
+        {
+            // Front
+            if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+            else if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+
+            // Periodic Back
+            if (DC[row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+            else if (DC[row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+        }
+        else
+        {
+            // Front
+            if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+            else if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+
+            // Back
+            if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+            else if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
+            }
+        }
+    } // end of the for loop
+
+    Q_Avg = (Q_13 + Q_21)/2;
+
+    if (opts->verbose)
+    {
+        printf("Shape Factor Simulation Results:\n");
+        printf("S = %1.3e, Q_21 = %1.3e, Q_13 = %1.3e, Pct. Error = %3.2f %%\n", Q_Avg/(opts->CLeft - opts->CRight), Q_21, Q_13, fabs((Q_21 - Q_13)/Q_21)*100);
+    }
+
+    return Q_Avg;
+}
+
+
+/*
+
     Simulation Control Function
 
 */
@@ -604,7 +865,7 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     float *CoeffMatrix = (float *)malloc(mesh->nElements * 7 * sizeof(float));
     float *RHS = (float *)malloc(mesh->nElements * sizeof(float));
-    float *Concentration = (float *)malloc(mesh->nElements * sizeof(float));
+    float *Temperature = (float *)malloc(mesh->nElements * sizeof(float));
 
     // initialize memory
 
@@ -612,11 +873,11 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     memset(RHS, 0, mesh->nElements * sizeof(float));
 
     // Initializing to CLeft, still converges fast
-    memset(Concentration, 0, mesh->nElements * sizeof(float));
+    memset(Temperature, 0, mesh->nElements * sizeof(float));
     for(int i = 0; i < mesh->nElements; i++)
     {
         if(DC[i] == 1)
-            Concentration[i] = opts->CLeft;
+            Temperature[i] = opts->CLeft;
     }
 
     // Discretize
@@ -636,257 +897,24 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     if(opts->useGPU)
     {
-    //     errorFlag = gpuHandler(opts, mesh, save, Concentration, CoeffMatrix, RHS);
+    //     errorFlag = gpuHandler(opts, mesh, save, Temperature, CoeffMatrix, RHS);
     //     if(errorFlag)
     //         return 1;
     // }
     // else
     // {
     //     // cpuSolve
-    //     pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Concentration);
+    //     pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
         printf("GPU not currently Supported. Using CPU instead.\n");
     }
 
     // CPU solve
-    pGS3D_SF_handle(opts, mesh, save, CoeffMatrix, RHS, Concentration);
+    pGS3D_SF_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
 
     // Calculate SF
-
-    // 1. Participating media
-    // 2. First channel BC (T=T_high)
-    // 3. Second Channel BC (T=T_low)
-
-    float Q_21 = 0.0;
-    float Q_13 = 0.0;
-
-    int slice, row, col;
-
-    for (long int i = 0; i < mesh->nElements; i++)
-    {
-        // if not participating media, ignore
-        if (DC[i] != 1)
-            continue;
-
-        // get index components
-        slice = i / (mesh->numCellsX * mesh->numCellsY);
-        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
-        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
-
-        // check all faces for neighbors
-
-        if (col == 0)
-        {
-            // Periodic West
-            if (DC[i + nCols - 1] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-            else if (DC[i + nCols - 1] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-
-            // East
-            if (DC[i + 1] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-            else if (DC[i + 1] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-        }
-        else if (col == mesh->numCellsX - 1)
-        {
-            // West
-            if (DC[i - 1] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-            else if (DC[i - 1] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-
-            // Periodic East
-            if (DC[i - (mesh->numCellsX - 1)] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-            else if (DC[i - (mesh->numCellsX - 1)] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-        }
-        else
-        {
-            // West
-            if (DC[i - 1] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-            else if (DC[i - 1] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-
-            // East
-            if (DC[i + 1] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-            else if (DC[i + 1] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dz) / (mesh->dx / 2);
-            }
-        }
-
-        if (row == 0)
-        {
-            // Periodic North
-            if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-            else if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-
-            // South
-            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-        }
-        else if (row == nRows - 1)
-        {
-            // North
-            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-
-            // Periodic South
-            if (DC[slice * nCols * nRows + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-            else if (DC[slice * nCols * nRows + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-        }
-        else
-        {
-            // North
-            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-
-            // South
-            if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-            else if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dz * mesh->dx) / (mesh->dy / 2);
-            }
-        }
-
-        if (slice == 0)
-        {
-            // Periodic Front
-            if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-            else if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-
-            // Back
-            if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-            else if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-        }
-        else if (slice == nSlices - 1)
-        {
-            // Front
-            if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-            else if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-
-            // Periodic Back
-            if (DC[row * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-            else if (DC[row * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-        }
-        else
-        {
-            // Front
-            if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-            else if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-
-            // Back
-            if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 2)
-            {
-                Q_21 += (opts->CLeft - Concentration[i]) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-            else if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 3)
-            {
-                Q_13 += (Concentration[i] - opts->CRight) * (mesh->dy * mesh->dx) / (mesh->dz / 2);
-            }
-        }
-    } // end of the for loop
-
-    // Calculate the shape factor
     
-    float Q_avg = (Q_13 + Q_21) / 2;
-
+    float Q_avg = Calc_Q_SF(opts, mesh, Temperature, DC);
     save->SF = Q_avg/(opts->CLeft - opts->CRight);
-
-    if (opts->verbose)
-    {
-        printf("Simulation Results:\n");
-        printf("S = %1.3e, Q_21 = %1.3e, Q_13 = %1.3e, Pct. Error = %3.2f %%\n", save->SF, Q_21, Q_13, fabs((Q_21 - Q_13)/Q_21)*100);
-    }
     
     // t50 Mandatory for sfSim
 
@@ -896,13 +924,16 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     // saveTemp
 
     if(opts->sfTMAP)
-        saveTemp_SF(DC, Concentration, mesh);
+        saveTemp_SF(DC, Temperature, mesh);
 
     // correct t50 from voxel to length
-    float t50 = save->part50 * 2 * PI;
+    // float t50 = save->part50 * 2 * PI;
     
 
     // memory management
+    free(Temperature);
+    free(CoeffMatrix);
+    free(RHS);
 
     return 0;
 }

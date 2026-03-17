@@ -56,6 +56,7 @@ typedef struct
     char *CMAP_Name;        // name for concentration map printing  (tortuosity)
     bool CMAP;              // print CMAP or no
     bool runSF;             // Shape factor simulation
+    bool sfTMAP;            // print temperature map
 } options;
 
 // Mesh related information

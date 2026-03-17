@@ -95,6 +95,7 @@ void optionsInit(options *opts)
     opts->partSD = 0;
     opts->CLeft = 0;
     opts->CRight = 1;
+    opts->runSF = 0;
 
     opts->subOut = 0;
     opts->printSD = 0;
@@ -112,6 +113,7 @@ void optionsInit(options *opts)
 
     // CMAP printing defaults to false
     opts->CMAP = 0;
+    opts->sfTMAP = 0;
 
     // Allocate Space for file names
 
@@ -227,6 +229,8 @@ void printOptsGeneral(options *opts)
     {
         printf("Running Shape Factor Simulation\n");
         printf("GPU solver not available, using CPU instead\n");
+        if(opts->sfTMAP)
+            printf("Printing Temperature Map sfTemp.csv\n");
     }
 
     if (opts->runSA)
@@ -372,6 +376,10 @@ int readInputGeneral(char *filename, options *opts)
         else if(strcmp(tempC, "runSF:") == 0)
         {
             opts->runSF = (bool)tempD;
+        }
+        else if(strcmp(tempC, "sfTMAP:") == 0)
+        {
+            opts->sfTMAP = (bool)tempD;
         }
     }
     return 0;

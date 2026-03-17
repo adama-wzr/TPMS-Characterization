@@ -64,19 +64,24 @@ void saveDC_SF(float *DC, meshInfo* mesh)
     return;
 }
 
-void saveTemp_SF(float *Concentration, meshInfo* mesh)
+void saveTemp_SF(float *DC, float *Concentration, meshInfo* mesh)
 {
     /*
         Function saveTemp_SF:
+        Inputs:
+            - DC (array w/ diffusion coefficients)
+            - Concentration (array with temperature distributions. I know, the name...)
+            - meshInfo struct
+        Outputs:
+            - none
 
-        This is a function to save temperatures in the shape factor simulation.
-
-        Function not called anywhere, just here for debugging.
+        This is a function to save temperatures in the shape factor simulation. Outputs
+        are saved to sfTemp.csv
     */
 
     // save to see temperatures calculated
 
-    FILE *TEST = fopen("TempInfo_SF.csv", "w+");
+    FILE *TEST = fopen("sfTemp.csv", "w+");
 
     fprintf(TEST, "x,y,z,T\n");
 
@@ -84,6 +89,8 @@ void saveTemp_SF(float *Concentration, meshInfo* mesh)
 
     for(int i = 0; i < mesh->nElements; i++)
     {
+        if(DC[i] != 1)
+            continue;
         slice = i / (mesh->numCellsX * mesh->numCellsY);
         row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
         col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
@@ -870,40 +877,32 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     } // end of the for loop
 
     // Calculate the shape factor
+    
+    float Q_avg = (Q_13 + Q_21) / 2;
 
-    float S = Q_21/(opts->CLeft - opts->CRight);
+    save->SF = Q_avg/(opts->CLeft - opts->CRight);
 
-    printf("Simulation Results:\n");
-    printf("S = %1.3e, Q_21 = %1.3e, Q_13 = %1.3e, Pct. Error = %3.2f %%\n", S, Q_21, Q_13, fabs((Q_21 - Q_13)/Q_21)*100);
-
-    // Geometric Results
-    if(opts->runSA == 0)
+    if (opts->verbose)
     {
-        SA(P, mesh, save, opts);
+        printf("Simulation Results:\n");
+        printf("S = %1.3e, Q_21 = %1.3e, Q_13 = %1.3e, Pct. Error = %3.2f %%\n", save->SF, Q_21, Q_13, fabs((Q_21 - Q_13)/Q_21)*100);
     }
+    
+    // t50 Mandatory for sfSim
 
     if(opts->partSD == 0)
-    {
         partSD_3D(opts, mesh, save, P, 1);
-    }
+
+    // saveTemp
+
+    if(opts->sfTMAP)
+        saveTemp_SF(DC, Concentration, mesh);
 
     // correct t50 from voxel to length
-
     float t50 = save->part50 * 2 * PI;
-
-    // correct specific surface area (L^-1) to surface area (L^2)
-
-    float total_area = (pow((2.0 * PI), 3) * save->SA);
-    float cross_sec_area = total_area / 2;
-
-    float S_geo = cross_sec_area / t50;
-
-    printf("\n-------------------------------\n");
-    printf("Geometric Results:\n");
-    printf("S = %1.3e, SA = %1.3e, t50 = %1.3e\n", S_geo, cross_sec_area, t50);
-
-    saveTemp_SF(Concentration, mesh);
     
+
+    // memory management
 
     return 0;
 }

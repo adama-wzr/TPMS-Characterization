@@ -4,7 +4,7 @@
 TPMS Structure definitions
 
 
-Last modified: 04/14/2025
+Last modified: 03/26/2026
 
 Silven Stallard
 Andre Adam
@@ -141,8 +141,10 @@ int TPMS_D(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = sin(x) * sin(y) * sin(z) + sin(x) * cos(y) * cos(z) + 
-                  cos(x) * sin(y) * cos(z) + cos(x) * cos(y) * sin(z);
+        float f = sin(x) * sin(y) * sin(z) + 
+				  sin(x) * cos(y) * cos(z) + 
+				  cos(x) * sin(y) * cos(z) + 
+				  cos(x) * cos(y) * sin(z);
 
         if (f > -b && f < b)
         {
@@ -337,7 +339,8 @@ int Neovius(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 3 * (cos(x) + cos(y) + cos(z)) + 4 * cos(x) * cos(y) * cos(z);
+        float f = 3 * (cos(x) + cos(y) + cos(z)) + 
+				  4 * (cos(x) * cos(y) * cos(z));
 
         if (f > -b && f < b)
         {
@@ -398,9 +401,10 @@ int C_Y(char *P, float b, meshInfo *info)
 
         // calculate f
 
-        float f = -sin(x) * sin(y) * sin(z) + sin(2 * x) * sin(y) + sin(2 * y) * sin(z) +
-                  sin(2 * z) * sin(x) - cos(x) * cos(y) * cos(z) + sin(2 * x) * cos(z) +
-                  sin(2 * y) * cos(x) + sin(2 * z) * cos(y);
+        float f = -sin(x) * sin(y) * sin(z) + 
+				  sin(2 * x) * sin(y) + sin(2 * y) * sin(z) + sin(2 * z) * sin(x) - 
+				  cos(x) * cos(y) * cos(z) + 
+				  sin(2 * x) * cos(z) + sin(2 * y) * cos(x) + sin(2 * z) * cos(y);
 
         if (f > -b && f < b)
         {
@@ -466,8 +470,10 @@ int Lidinoid(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = (sin(2 * x) * cos(y) * sin(z) + sin(x) * sin(2 * y) * cos(z) + cos(x) * sin(y) * sin(2 * z)) -
-                  (cos(2 * x)*cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) + 0.3;
+        float f = (sin(2 * x) * cos(y) * sin(z) + 
+				   sin(x) * sin(2 * y) * cos(z) + 
+				   cos(x) * sin(y) * sin(2 * z)) -
+                  (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) + 0.3;
 
         if (f > -b && f < b)
         {
@@ -601,8 +607,9 @@ int FRD(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 8 * cos(x) * cos(y) * cos(z) + cos(2 * x) * cos(2 * y) * cos(2 * z) - 
-                  (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x));
+        float f = 8 * cos(x) * cos(y) * cos(z) + 
+				  cos(2 * x) * cos(2 * y) * cos(2 * z) - 
+                 (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x));
 
         if (f > -b && f < b)
         {
@@ -668,7 +675,8 @@ int S(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = cos(2 * x) * sin(y) * cos(z) + cos(x) * cos(2 * y) * sin(z) + 
+        float f = cos(2 * x) * sin(y) * cos(z) + 
+				  cos(x) * cos(2 * y) * sin(z) + 
 				  sin(x) * cos(y) * cos(2 * z);
 
         if (f > -b && f < b)
@@ -738,7 +746,8 @@ int PpCP(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 0.3 * cos(x) * cos(y) * cos(z) + 0.2 * (cos(x) + cos(y) + cos(z)) +
+        float f = 0.3 * cos(x) * cos(y) * cos(z) + 
+				  0.2 * (cos(x) + cos(y) + cos(z)) +
 				  0.1 * (cos(2 * x) * cos(2 * y) * cos(2 * z)) + 
 				  0.1 * (cos(2 * x) + cos(2 * y) + cos(2 * z)) + 
 				  0.05 * (cos(3 * x) + cos(3 * y) + cos(3 * z)) + 
@@ -809,7 +818,9 @@ int Split_P(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 1.1 * (sin(2 * x) * cos(y) * sin(z) + sin(2 * y) * cos(z) * sin(x) + sin(2 * z) * cos(x) * sin(y)) -
+        float f = 1.1 * (sin(2 * x) * cos(y) * sin(z) + 
+						 sin(2 * y) * cos(z) * sin(x) + 
+						 sin(2 * z) * cos(x) * sin(y)) -
 				  0.2 * (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x)) - 
 				  0.4 * (cos(2 * x) + cos(2 * y) + cos(2 * z));
 
@@ -943,9 +954,12 @@ int CD(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = cos(3 * x) * cos(y) * cos(z) - sin(3 * x) * sin(y) * sin(z) +
-				  cos(x) * cos(3 * y) * cos(z) - sin(x) * sin(3 * y) * sin(z) + 
-				  cos(x) * cos(y) * cos(3 * z) - sin(x) * sin(y) * sin(3 * z);
+        float f = cos(3 * x) * cos(y) * cos(z) - 
+				  sin(3 * x) * sin(y) * sin(z) +
+				  cos(x) * cos(3 * y) * cos(z) - 
+				  sin(x) * sin(3 * y) * sin(z) + 
+				  cos(x) * cos(y) * cos(3 * z) - 
+				  sin(x) * sin(y) * sin(3 * z);
 
         if (f > -b && f < b)
         {
@@ -1011,7 +1025,8 @@ int G_prime(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = sin(2 * x) * cos(y) * sin(z) + sin(x) * sin(2 * y) * cos(z) +
+        float f = sin(2 * x) * cos(y) * sin(z) + 
+				  sin(x) * sin(2 * y) * cos(z) +
 				  cos(x) * sin(y) * sin(2 * z) + 0.32;
 
         if (f > -b && f < b)
@@ -1078,7 +1093,9 @@ int G_prime2(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 5 * (sin(2 * x) * cos(y) * sin(z) + sin(x) * sin(2 * y) * cos(z) + cos(x) * sin(y) * sin(2 * z)) +
+        float f = 5 * (sin(2 * x) * cos(y) * sin(z) + 
+					   sin(x) * sin(2 * y) * cos(z) + 
+					   cos(x) * sin(y) * sin(2 * z)) +
 				  (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * z) * cos(2 * x));
 
         if (f > -b && f < b)
@@ -1147,10 +1164,13 @@ int D_prime(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 0.5 * (cos(x) * cos(y) * cos(z) + cos(x) * sin(y) * sin(z) + 
-				  sin(x) * cos(y) * sin(z) * sin(x) * sin(y) * cos(z)) - 
-				  0.5 * (sin(2 * x) * sin(2 * y) + sin(2 * y) * sin(2 * z) +
-				  sin(2 * z) * sin(2 * x)) - 0.2;
+        float f = 0.5 * (cos(x) * cos(y) * cos(z) + 
+						 cos(x) * sin(y) * sin(z) + 
+				  		 sin(x) * cos(y) * sin(z) + 
+						 sin(x) * sin(y) * cos(z)) - 
+				  0.5 * (sin(2 * x) * sin(2 * y) + 
+						 sin(2 * y) * sin(2 * z) +
+				  		 sin(2 * z) * sin(2 * x)) - 0.2;
 
         if (f > -b && f < b)
         {
@@ -1288,9 +1308,12 @@ int CS(char *P, float b, meshInfo *info)
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
         float f = (cos(2 * x) + cos(2 * y) + cos(2 * z)) + 
-				  2 * (sin(3 * x) * sin(2 * y) * cos(z) + cos(x) * sin(3 * y) * sin(2 * z) +
-				  sin(2 * x) * cos(y) * sin(3 * z)) + 2 * (sin(2 * x) * cos(3 * y) * sin(z) +
-				  sin(x) * sin(2 * y) * cos(3 * z) + cos(3 * x) * sin(y) * sin(2 * z));
+				  2 * (sin(3 * x) * sin(2 * y) * cos(z) + 
+					   cos(x) * sin(3 * y) * sin(2 * z) +
+				  	   sin(2 * x) * cos(y) * sin(3 * z)) + 
+				  2 * (sin(2 * x) * cos(3 * y) * sin(z) +
+				  	   sin(x) * sin(2 * y) * cos(3 * z) + 
+					   cos(3 * x) * sin(y) * sin(2 * z));
 
         if (f > -b && f < b)
         {
@@ -1358,7 +1381,8 @@ int Y(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = cos(x) * cos(y) * cos(z) + sin(x) * sin(y) * sin(z) + 
+        float f = cos(x) * cos(y) * cos(z) + 
+				  sin(x) * sin(y) * sin(z) + 
 				  (sin(2 * x) * sin(y) + sin(2 * y) * sin(z) + sin(2 * z) * sin(x)) +
 				  (cos(x) * sin(2 * y) + cos(y) * sin(2 * z) + cos(z) * sin(2 * x));
 
@@ -1426,8 +1450,8 @@ int pmY(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 2 * (cos(x) * cos(y) * cos(z)) + (sin(2 * x) * sin(y) + sin(2 * y) * sin(z) +
-				  sin(2 * z) * sin(x));
+        float f = 2 * (cos(x) * cos(y) * cos(z)) + 
+				  (sin(2 * x) * sin(y) + sin(2 * y) * sin(z) + sin(2 * z) * sin(x));
 
         if (f > -b && f < b)
         {
@@ -1560,9 +1584,10 @@ int CI2_Y(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = 2 * (sin(2 * x) * cos(y) * sin(z) + sin(x) * sin(2 * y) * cos(z) +
-				  cos(x) * sin(y) * sin(2 * z)) + (cos(2 * x) * cos(2 * y) +
-				  cos(2 * y) * cos(2 * z) + cos(2 * x) * cos(2 * z));
+        float f = 2 * (sin(2 * x) * cos(y) * sin(z) + 
+					   sin(x) * sin(2 * y) * cos(z) +
+					   cos(x) * sin(y) * sin(2 * z)) + 
+				  (cos(2 * x) * cos(2 * y) + cos(2 * y) * cos(2 * z) + cos(2 * x) * cos(2 * z));
 
         if (f > -b && f < b)
         {
@@ -1695,8 +1720,9 @@ int Qstar(char *P, float b, meshInfo *info)
         float y = -PI + dx / 2.0 + (float)row * dx;
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
-        float f = (cos(x) - 2 * cos(y)) * cos(z) - 1.7320508 * sin(z) * 
-				  (cos(x - y) - cos(x)) + cos(x - y) * cos(z);
+        float f = (cos(x) - 2 * cos(y)) * cos(z) - 
+				  sqrt(3) * sin(z) * (cos(x - y) - cos(x)) + 
+				  cos(x - y) * cos(z);
 
         if (f > -b && f < b)
         {
@@ -1834,7 +1860,7 @@ int Slotted_P(char *P, float b, meshInfo *info)
         float z = -PI + dx / 2.0 + (float)slice * dx;
 
         float f = -2 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(z) * cos(x)) - 
-				  2 * (cos(2 * x) + cos(2 * y) + cos(2 * z)) + 
+				   2 * (cos(2 * x) + cos(2 * y) + cos(2 * z)) + 
 				  (cos(2 * x) * cos(y) + cos(2 * y) * cos(z) + cos(2 * z) * cos(x)) -
 				  (cos(x) * cos(2 * y) + cos(y) * cos(2 * z) + cos(z) * cos(2 * x));
 

@@ -18,6 +18,7 @@ Andre Adam
 #include <cpu_solvers/cpuSolvers.hpp>
 #include <surfaceArea.hpp>
 #include <sizeDistributions.hpp>
+#include <omp.h>
 
 #ifdef USE_CUDA
     #include <cuda_solvers/gpuSolve.cu>
@@ -98,6 +99,98 @@ void saveTemp_SF(float *DC, float *Temperature, meshInfo* mesh)
     }
 
     fclose(TEST);
+
+    return;
+}
+
+/*
+
+    Initializing Simulation Temperature Distribution:
+
+*/
+
+void TemperatureInit(float *Temperature, float *DC, meshInfo *mesh, options *opts)
+{
+    /*
+    
+        Function TemperatureInit:
+
+        Inputs:
+            - Pointer to temperature distribution array
+            - pointer to DC array (boundary flags)
+            - pointer to meshInfo struct
+            - pointer to opts struct
+        
+        Outputs:
+            - none
+        
+        Function will initialize the temperature as a linear distribution
+        between CLeft and CRight, depending on the element
+        distance from CLeft or CRight.
+    
+        Strategy: Calculate EDT for POI relative to CLeft and relative to CRight
+        separately. Then, linearly interpolate what the temperature should be
+        based on the difference between the distances.
+
+        For distances DL and DR, assume the total distance to boundaries is DL + DR.
+        Then, the temperature will be:
+
+        T = opts->CLeft + (DL) / (DL + DR) * opts->CRight;
+    */
+
+    // Open two boolean arrays:
+
+    bool *Bool_R = (bool *)malloc(sizeof(bool) * mesh->nElements);
+    bool *Bool_L = (bool *)malloc(sizeof(bool) * mesh->nElements);
+
+    // Two arrays to store distances
+
+    float *EDT_R = (float *)malloc(sizeof(float) * mesh->nElements);
+    float *EDT_L = (float *)malloc(sizeof(float) * mesh->nElements);
+
+    // parallel programming stuff
+
+    omp_set_num_threads(opts->nThreads);
+
+    // Initialize
+
+    memset(Bool_L, 0, sizeof(bool) * mesh->nElements);
+    memset(Bool_R, 0, sizeof(bool) * mesh->nElements);
+
+    memset(EDT_L, 0, sizeof(float) * mesh->nElements);
+    memset(EDT_R, 0, sizeof(float) * mesh->nElements);
+
+    // populate bool arrays
+
+    #pragma omp parallel for schedule(auto)
+    for(long int i = 0; i < mesh->nElements; i++)
+    {
+        if(DC[i] == 3)
+            Bool_L[i] = 1;
+        else if(DC[i] == 2)
+            Bool_R[i] = 1;
+    }
+
+    // Calculate EDT according to Meijster's algorithm
+
+    pMeijster3D(Bool_L, EDT_L, mesh, 1);
+
+    pMeijster3D(Bool_R, EDT_R, mesh, 1);
+
+    // Initialize Temperature array
+
+    #pragma omp parallel for schedule(auto)
+    for(long int i = 0; i < mesh->nElements; i++)
+    {
+        if(DC[i] == 1)
+            Temperature[i] = 0.0 + EDT_L[i]/(EDT_R[i] + EDT_L[i]) * 1.0;
+    }
+
+    // Memory management
+    free(EDT_R);
+    free(EDT_L);
+    free(Bool_R);
+    free(Bool_L);
 
     return;
 }
@@ -831,11 +924,6 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     mesh->dy = (float) 2*PI /mesh->numCellsY;
     mesh->dz = (float) 2*PI /mesh->numCellsZ;
 
-    int nRows, nCols, nSlices;
-    nCols = mesh->numCellsX;
-    nRows = mesh->numCellsY;
-    nSlices = mesh->numCellsZ;
-
     // declare and define DC in the main flow channel
 
     float *DC = (float *)malloc(sizeof(float) * mesh->nElements);
@@ -872,13 +960,13 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     memset(CoeffMatrix, 0, sizeof(float) * 7 * mesh->nElements);
     memset(RHS, 0, mesh->nElements * sizeof(float));
 
-    // Initializing to CLeft, still converges fast
+    // Initializing temperature distribution
     memset(Temperature, 0, mesh->nElements * sizeof(float));
-    for(int i = 0; i < mesh->nElements; i++)
-    {
-        if(DC[i] == 1)
-            Temperature[i] = opts->CLeft;
-    }
+    
+    if(opts->verbose)
+        printf("Initializing Temperature\n");
+
+    TemperatureInit(Temperature, DC, mesh, opts);
 
     // Discretize
 
@@ -892,7 +980,7 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     // bool errorFlag = 0;
 
     /*
-        Code runs fast on CPU, I won't implement GPU support for now.
+        Code runs fast on CPU, GPU coming soon.
     */
 
     if(opts->useGPU)

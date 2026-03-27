@@ -11,6 +11,7 @@ Andre Adam
 
 #include <data_structures.hpp>
 #include <constants.hpp>
+#include <omp.h>
 
 void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
 {
@@ -43,7 +44,7 @@ void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
 
     // Loop over the whole structure
     int slice, row, col;
-
+    
     for (long int i = 0; i < mesh->nElements; i++)
     {
         // if P is not solid, continue

@@ -38,6 +38,15 @@ static const char *TPMS_Names[] = {
     Lookup table for TPMS Pinch:
 */
 
+
+/*
+
+    WARNING: THIS LIST IS OUTDATED
+
+    Several TPMS have multiple pinch points and multiple crit points.
+    Do not rely on the lookup tables below for incongruent TPMS.
+
+*/
 static const float TPMS_Pinch[] = {
     1.414f,
     0.999f,

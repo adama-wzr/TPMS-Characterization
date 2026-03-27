@@ -57,11 +57,9 @@ int errorCheckInput(options *opts)
     {
         printf("*********************************************************\n\n");
         printf("                        WARNING!!                        \n");
-        printf("Iso-Value %f for TPMS %s is beyond pinch value %f\n",
+        printf("Iso-Value %f for TPMS %s is beyond pinch value %f\n\n",
                opts->isoValues, TPMS_Names[opts->TPMS_Type - 1], TPMS_Pinch[opts->TPMS_Type - 1]);
-        printf("Skipping Tau-F simulation\n\n");
         printf("*********************************************************\n\n");
-        opts->Tau_f = 0;
     }
 
     return 0;

@@ -919,10 +919,6 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
         Function will setup and run a tortuosity simulation based on the
         user entered options. All releant information is saved to struct.
     */
-    
-    mesh->dx = (float) 2*PI /mesh->numCellsX;
-    mesh->dy = (float) 2*PI /mesh->numCellsY;
-    mesh->dz = (float) 2*PI /mesh->numCellsZ;
 
     // declare and define DC in the main flow channel
 

@@ -44,6 +44,13 @@ int errorCheckInput(options *opts)
         as that constitutes a "broken" structure.
     */
 
+    if(opts->TPMS_Type <= 0)
+    {
+        if(opts->verbose)
+            printf("Special Case: Sphere\n");
+        return 0;
+    }
+
     // check crit
 
     if (opts->isoValues >= TPMS_Crit[opts->TPMS_Type - 1])
@@ -169,8 +176,13 @@ void printOptsGeneral(options *opts)
     printf("----------------------------------\n\n");
     printf("         Selected Options:        \n\n");
     printf("-----------------------------------\n");
-
-    printf("TPMS Type = %s\n", TPMS_Names[opts->TPMS_Type - 1]);
+    if(opts->TPMS_Type > 0 && opts->TPMS_Type < 28)
+        printf("TPMS Type = %s\n", TPMS_Names[opts->TPMS_Type - 1]);
+    else
+    {
+        printf("Special Case: Sphere\n");
+        opts->runSF = 0;
+    }
     printf("IsoValues = %1.3f\n", opts->isoValues);
     printf("Side Length = %d\n", opts->nVoxels);
     printf("Number of CPU Threads = %d\n", opts->nThreads);

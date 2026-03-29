@@ -1877,6 +1877,68 @@ int Slotted_P(char *P, float b, meshInfo *info)
     return 0;
 }
 
+int CreateSphere(char *P, meshInfo *info)
+{
+    /*
+        CreateSphere Function:
+        Inputs:
+            - pointer to P array, where the structure will be held.
+            - pointer to mesh array
+        
+        Outputs:
+            - none
+        
+        This function creates a sphere with radius = opts->nVoxels/3.
+        The sphere is centered in the center of the unit cell.
+
+        *** This function is primarily for debugging or for testing
+        other function's behavior on ideal structures with a 
+        voxel-based reconstruction.
+    */
+
+    int numCellsX = info->numCellsX;
+
+    // define step dx
+
+    float dx = (float)2.0 * PI / (float)numCellsX;
+
+    // We will also calculate the porosity based on this discretization
+
+    size_t count = 0;
+
+    int centerX, centerY, centerZ;
+
+    centerX = info->numCellsX/2;
+    centerY = info->numCellsY/2;
+    centerZ = info->numCellsZ/2;
+
+    float radius = info->numCellsX/3;
+
+
+
+    // Begin main loop
+
+    for (long int i = 0; i < info->nElements; i++)
+    {
+        // Break down i into the integer indexes
+        int slice = i / (numCellsX * numCellsX);
+        int row = (i - slice * numCellsX * numCellsX) / numCellsX;
+        int col = i - slice * numCellsX * numCellsX - row * numCellsX;
+
+        if (pow((col - centerX),2) + pow((row - centerY),2) + pow((slice - centerZ),2) <= pow(radius, 2))
+        {
+            P[i] = 1;
+            count++;
+        }
+    }
+
+    info->SVF = (float)count / (float)info->nElements;
+    info->porosity = 1.0f - info->SVF;
+
+
+    return 0;
+}
+
 
 /*
     TPMS Function Lookup Table:

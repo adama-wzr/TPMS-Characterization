@@ -52,7 +52,9 @@ The CMAKE file is the same for Windows and Linux. It has been tested on Windows 
 
 # Publications
 
-The publication associated with this code is currently under review.
+If this code is useful to you, please consider citing the following publication(s):
+
+- Stallard, S., Adam, A., Yang, G., Bergman, T. L., & Li, X. (2026). Categorization of congruent TPMS by geometric features using manifold learning and clustering. Computational Materials Science, 268, 114667. https://doi.org/10.1016/j.commatsci.2026.114667
 
 # Authors
 
@@ -85,10 +87,8 @@ This research used resources of the Compute and Data Environment for Science (CA
 
 **03/07/2026 Update** -> New changes will be made on a development branch, starting with a shape factor addition to the code.
 
-- Look out for the publication! It should be coming soon!
-
 - Additional capabilities are planned:
     - Code documentation.
     - More characterization capabilities.
     - A UI for managing input file and desired outputs.
-    - Better Windows compatibility    
+    - Better Windows compatibility

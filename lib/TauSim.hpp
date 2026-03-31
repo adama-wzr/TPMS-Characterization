@@ -496,6 +496,34 @@ int FloodFill3D_PB(meshInfo *mesh, float *DC)
     return 0;
 }
 
+void filterDC_Tau(options *opts, meshInfo *mesh, float *DC, char *subDomains)
+{
+    /*
+        Function filterDC_Tau:
+        Inputs:
+            - pointer to opts struct
+            - pointer to meshInfo struct
+            - pointer to DC array
+            - pointer to subDomains array
+        Outputs:
+            - none
+        
+        Function will clear DC values that compose subdomains
+        that are not connected to both boundaries.
+    */
+
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        // skip if not fully connected
+        if (mesh->sdInfo[subDomains[i] - 1].FC == 0)
+        {
+            DC[i] = 0;
+        }
+    }
+
+    return;
+}
+
 int Disc3D_Tau(options *opts,
                meshInfo *mesh,
                float *DC,
@@ -904,6 +932,13 @@ int TauSim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     // Populate the array based on the structure
 
     SetDC_Tau(DC, P, mesh, POI);
+
+    // if POI == 0, remove unconnected DC
+
+    if(POI == 0)
+    {
+        filterDC_Tau(opts, mesh, DC, subDomain);
+    }
 
     // Find participating media, this will remove cutoff channels
 

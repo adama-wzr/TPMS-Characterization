@@ -150,6 +150,7 @@ int main(int argc, char **argv)
     if(saveFlag == 0)
     {
         subDomains = (char *)malloc(sizeof(char) * mesh.nElements);
+        memset(subDomains, 0, sizeof(char) * mesh.nElements);
         subDomainFF(&mesh, P, subDomains);
     }
 

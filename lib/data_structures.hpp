@@ -107,6 +107,7 @@ typedef std::tuple<int, int, int> coord;
 
 typedef int (*tpms_ptr)(char*, float, meshInfo*);
 
+typedef float (*tpms_f_ptr)(float, float, float);
 
 // Table for Immersed Boundary Correction
 

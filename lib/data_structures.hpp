@@ -108,6 +108,15 @@ typedef std::tuple<int, int, int> coord;
 typedef int (*tpms_ptr)(char*, float, meshInfo*);
 
 
+// Table for Immersed Boundary Correction
+
+typedef struct
+{
+    // idx = dw,de,ds,dn,db,df
+    float *Dist = (float *)malloc(sizeof(float) * 6); 
+}IBM_Correct;
+
+
 /*
 
 Initializers:

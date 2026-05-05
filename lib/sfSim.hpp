@@ -233,15 +233,15 @@ float temp_opt(options *opts, meshInfo *mesh, int col_idx, int row_idx, int slic
         }
         else
         {
-            printf("Big mistake, deltaX not calculated properly");
+            printf("Big mistake, deltaX not calculated properly\n");
             return 1;
         }
 
-        for(float i = lb; i <= col_idx; i+=step_size)
+        for(float i = lb; i <= ub; i+=step_size)
         {
-            float x_coord = i*mesh->dx + mesh->dx/2;
-            float y_coord = row_idx * mesh->dy + mesh->dy/2;
-            float z_coord = slice_idx * mesh->dz + mesh->dz/2;
+            float x_coord = i*mesh->dx + mesh->dx/2 - PI;
+            float y_coord = row_idx * mesh->dy + mesh->dy/2 - PI;
+            float z_coord = slice_idx * mesh->dz + mesh->dz/2 - PI;
 
             float new_eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](x_coord, y_coord, z_coord));
             
@@ -252,9 +252,74 @@ float temp_opt(options *opts, meshInfo *mesh, int col_idx, int row_idx, int slic
             }
         }
     }
-    else
+    else if(dir_search == 1)
     {
-        printf("Not yet implemented!\n");
+        step_size = fabs(row_idx - nb_row)/steps;
+
+        if(nb_row < row_idx)
+        {
+            ub = row_idx;
+            lb = nb_row;
+        }
+        else if(nb_row > row_idx)
+        {
+            ub = nb_row;
+            lb = row_idx;
+        }
+        else
+        {
+            printf("Big Mistake, deltaY not calculated properly\n");
+            return 1;
+        }
+
+        for(float i = lb; i <= ub; i+=step_size)
+        {
+            float x_coord = col_idx * mesh->dx + mesh->dx/2 - PI;
+            float y_coord = i*mesh->dy + mesh->dy/2 - PI;
+            float z_coord = slice_idx * mesh->dz + mesh->dz/2 - PI;
+
+            float new_eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](x_coord, y_coord, z_coord));
+
+            if(new_eps < eps)
+            {
+                eps = new_eps;
+                ib_delta = 1/steps * mesh->dy;
+            }
+        }
+    }
+    else if(dir_search == 2)
+    {
+        step_size = fabs(slice_idx - nb_slice)/steps;
+
+        if(nb_slice < slice_idx)
+        {
+            ub = slice_idx;
+            lb = nb_slice;
+        }
+        else if(nb_slice > slice_idx)
+        {
+            ub = nb_slice;
+            lb = slice_idx;
+        }
+        else
+        {
+            printf("Big Mistake, deltaY not calculated properly\n");
+            return 1;
+        }
+
+        for(float i = lb; i <= ub; i+=step_size)
+        {
+            float x_coord = col_idx * mesh->dx + mesh->dx/2 - PI;
+            float y_coord = row_idx*mesh->dy + mesh->dy/2 - PI;
+            float z_coord = i * mesh->dz + mesh->dz/2 - PI;
+            float new_eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](x_coord, y_coord, z_coord));
+
+            if(new_eps < eps)
+            {
+                eps = new_eps;
+                ib_delta = 1/steps * mesh->dz;
+            }
+        }
     }
     
     return ib_delta;
@@ -280,11 +345,6 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
     nRows = mesh->numCellsY;
     nSlices = mesh->numCellsZ;
 
-    float dx, dy, dz;
-    dx = mesh->dx;
-    dy = mesh->dy;
-    dz = mesh->dz;
-
     for(int i = 0; i < mesh->nElements; i++)
     {
         // check if fluid, no need to do anything
@@ -305,14 +365,14 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
 
         // West
         long int nbIdx = 0;
-        if(col = 0)
+        if(col == 0)
         {
             // periodic west
             nbIdx = slice * nRows * nCols + row * nCols + (nCols - 1); 
             if (DC[nbIdx] != DC[i])
             {
                 // Update dx_w accordingly
-                float dx_w = temp_opt(opts, mesh, col, row, slice, (nCols - 1), row, slice, 0);
+                float dx_w = temp_opt(opts, mesh, col, row, slice, -1, row, slice, 0); // special periodic dist -1
                 IB[i].Dist[0] = dx_w;
             }
             else
@@ -341,7 +401,7 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
             nbIdx = slice * nRows * nCols + row * nCols + 0;
             if(DC[nbIdx] != DC[i])
             {
-                float dx_e = temp_opt(opts, mesh, col, row, slice, 0, row, slice, 0);
+                float dx_e = temp_opt(opts, mesh, col, row, slice, nCols, row, slice, 0); // special periodic dist nCols
                 IB[i].Dist[1] = dx_e;
             }
             else
@@ -365,13 +425,13 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
 
         // South
 
-        if(row = nRows - 1)
+        if(row == nRows - 1)
         {
             // Periodic South
             nbIdx = slice * nRows * nCols + (0) * nCols + col;
             if(DC[nbIdx] != DC[i])
             {
-                float dy_s = temp_opt(opts, mesh, col, row, slice, col, 0, slice, 1);
+                float dy_s = temp_opt(opts, mesh, col, row, slice, col, nRows, slice, 1); // special periodic dist nRows
                 IB[i].Dist[2] = dy_s;
             }
             else
@@ -402,7 +462,7 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
             nbIdx = slice * nRows * nCols + (nRows - 1) * nCols + col;
             if(DC[nbIdx] != DC[i])
             {
-                float dy_n = temp_opt(opts, mesh, col, row, slice, col, nRows - 1, slice, 1);
+                float dy_n = temp_opt(opts, mesh, col, row, slice, col, -1, slice, 1); // special periodic dist -1
                 IB[i].Dist[3] = dy_n;
             }
             else
@@ -433,7 +493,7 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
             nbIdx = (0) * nRows * nCols + row * nCols + col;
             if(DC[nbIdx] != DC[i])
             {
-                float dz_b = temp_opt(opts, mesh, col, row, slice, col, row, 0, 2);
+                float dz_b = temp_opt(opts, mesh, col, row, slice, col, row, nSlices, 2); // special periodic dist nSlices
                 IB[i].Dist[4] = dz_b;
             }
             else
@@ -444,10 +504,10 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
         else
         {
             // Not Periodic Front
-            nbIdx = (nSlices + 1) * nRows * nCols + row * nCols + col;
+            nbIdx = (slice + 1) * nRows * nCols + row * nCols + col;
             if(DC[nbIdx] != DC[i])
             {
-                float dz_b = temp_opt(opts, mesh, col, row, slice, col, row, slice - 1, 2);
+                float dz_b = temp_opt(opts, mesh, col, row, slice, col, row, slice + 1, 2);
                 IB[i].Dist[4] = dz_b;
             }
             else
@@ -464,7 +524,7 @@ void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
             nbIdx = (nSlices - 1) * nRows * nCols + row * nCols + col;
             if(DC[nbIdx] != DC[i])
             {
-                float dz_f = temp_opt(opts, mesh, col, row, slice, col, row, nSlices - 1, 2);
+                float dz_f = temp_opt(opts, mesh, col, row, slice, col, row, -1, 2); // special periodic dist -1
                 IB[i].Dist[5] = dz_f;
             }
             else
@@ -1305,8 +1365,10 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     IBM_Correct *IBs = (IBM_Correct *)malloc(sizeof(IBM_Correct) * mesh->nElements);
 
+    memset(IBs, 0, sizeof(float)*mesh->nElements*6);
+
     correctIBs(DC, opts, mesh, IBs);
-    
+
     // t50 Mandatory for sfSim
 
     if(opts->partSD == 0)

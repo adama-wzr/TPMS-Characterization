@@ -114,7 +114,7 @@ typedef float (*tpms_f_ptr)(float, float, float);
 typedef struct
 {
     // idx = dw,de,ds,dn,db,df
-    float *Dist = (float *)malloc(sizeof(float) * 6); 
+    float Dist[6]; 
 }IBM_Correct;
 
 

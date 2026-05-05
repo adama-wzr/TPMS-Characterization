@@ -19,6 +19,7 @@ Andre Adam
 #include <surfaceArea.hpp>
 #include <sizeDistributions.hpp>
 #include <omp.h>
+#include "TPMS_definitions.hpp"
 
 #ifdef USE_CUDA
     #include <cuda_solvers/gpuSolve.cu>
@@ -192,6 +193,304 @@ void TemperatureInit(float *Temperature, float *DC, meshInfo *mesh, options *opt
     free(Bool_R);
     free(Bool_L);
 
+    return;
+}
+
+float temp_opt(options *opts, meshInfo *mesh, int col_idx, int row_idx, int slice_idx, int nb_col, int nb_row, int nb_slice, int dir_search)
+{
+    /*
+    
+        This is just a placeholder function to test the code out.
+
+        if dir = 0, x
+        if dir = 1, y
+        if dir = 2, z
+    
+    */
+
+    float eps = 1.000;
+    float ib_delta = 0.0;
+    
+    int steps = 100;
+
+    float step_size = 0;
+
+    int lb, ub;
+
+    if(dir_search == 0)
+    {
+        step_size = fabs(col_idx - nb_col)/steps;
+
+        if(nb_col < col_idx)
+        {
+            ub = col_idx;
+            lb = nb_col;
+        }
+        else if(col_idx < nb_col)
+        {
+            ub = nb_col;
+            lb = col_idx;
+        }
+        else
+        {
+            printf("Big mistake, deltaX not calculated properly");
+            return 1;
+        }
+
+        for(float i = lb; i <= col_idx; i+=step_size)
+        {
+            float x_coord = i*mesh->dx + mesh->dx/2;
+            float y_coord = row_idx * mesh->dy + mesh->dy/2;
+            float z_coord = slice_idx * mesh->dz + mesh->dz/2;
+
+            float new_eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](x_coord, y_coord, z_coord));
+            
+            if(new_eps < eps)
+            {
+                eps = new_eps;
+                ib_delta = i/steps * mesh->dx;
+            }
+        }
+    }
+    else
+    {
+        printf("Not yet implemented!\n");
+    }
+    
+    return ib_delta;
+}
+
+void correctIBs(float *DC, options *opts, meshInfo *mesh, IBM_Correct *IB)
+{
+    /*
+        correctIBs Function:
+        Inputs:
+            - pointer to DC
+            - pointer to meshInfo
+            - pointer to IB table
+        Outputs:
+            - none
+        Function will correct the distances to IBs where needed.
+        If not needed, just populate IB with corresponding dx,
+        dy, or dz.
+    */
+
+    int nCols, nRows, nSlices;
+    nCols = mesh->numCellsX;
+    nRows = mesh->numCellsY;
+    nSlices = mesh->numCellsZ;
+
+    float dx, dy, dz;
+    dx = mesh->dx;
+    dy = mesh->dy;
+    dz = mesh->dz;
+
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        // check if fluid, no need to do anything
+        if (DC[i] != 1)
+            continue;
+        
+        /*
+            Solid voxel:
+            - if boundary, correct dx, dy, dz
+            - if not boundary, dx, dy, dz remain
+                unchanged
+        */
+
+        int row, col, slice;
+        slice = i / (nRows * nCols);
+        row = (i - slice * nRows * nCols) / nCols;
+        col = (i - slice * nRows * nCols - row * nCols);
+
+        // West
+        long int nbIdx = 0;
+        if(col = 0)
+        {
+            // periodic west
+            nbIdx = slice * nRows * nCols + row * nCols + (nCols - 1); 
+            if (DC[nbIdx] != DC[i])
+            {
+                // Update dx_w accordingly
+                float dx_w = temp_opt(opts, mesh, col, row, slice, (nCols - 1), row, slice, 0);
+                IB[i].Dist[0] = dx_w;
+            }
+            else
+            {
+                IB[i].Dist[0] = mesh->dx;
+            }
+        } else
+        {
+            // not periodic West
+            nbIdx = i - 1;
+            if (DC[nbIdx] != DC[i])
+            {
+                float dx_w = temp_opt(opts, mesh, col, row, slice, (col-1), row, slice, 0);
+                IB[i].Dist[0] = dx_w;
+            }
+            else
+            {
+                IB[i].Dist[0] = mesh->dx;
+            }
+        }
+
+        // East
+        if(col == nCols - 1)
+        {
+            // periodic East
+            nbIdx = slice * nRows * nCols + row * nCols + 0;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dx_e = temp_opt(opts, mesh, col, row, slice, 0, row, slice, 0);
+                IB[i].Dist[1] = dx_e;
+            }
+            else
+            {
+                IB[i].Dist[1] = mesh->dx;
+            }
+        } else
+        {
+            // not periodic East
+            nbIdx = i+1;
+            if(DC[nbIdx] != DC[i])
+            {    
+                float dx_e = temp_opt(opts, mesh, col, row, slice, (col+1), row, slice, 0);
+                IB[i].Dist[1] = dx_e;
+            }
+            else
+            {
+                IB[i].Dist[1] = mesh->dx;
+            }
+        }
+
+        // South
+
+        if(row = nRows - 1)
+        {
+            // Periodic South
+            nbIdx = slice * nRows * nCols + (0) * nCols + col;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dy_s = temp_opt(opts, mesh, col, row, slice, col, 0, slice, 1);
+                IB[i].Dist[2] = dy_s;
+            }
+            else
+            {
+                IB[i].Dist[2] = mesh->dy;
+            }
+        }
+        else
+        {
+            // Not Periodic South
+            nbIdx = slice * nRows * nCols + (row-1) * nCols + col;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dy_s = temp_opt(opts, mesh, col, row, slice, col, row-1, slice, 1);
+                IB[i].Dist[2] = dy_s;
+            }
+            else
+            {
+                IB[i].Dist[2] = mesh->dy;
+            }
+        }
+
+        // North
+
+        if(row == 0)
+        {
+            // Periodic North
+            nbIdx = slice * nRows * nCols + (nRows - 1) * nCols + col;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dy_n = temp_opt(opts, mesh, col, row, slice, col, nRows - 1, slice, 1);
+                IB[i].Dist[3] = dy_n;
+            }
+            else
+            {
+                IB[i].Dist[3] = mesh->dy;
+            }
+        }
+        else
+        {
+            // Not periodic North
+            nbIdx = slice * nRows * nCols + (row - 1) * nCols + col;
+            if(DC[nbIdx] == DC[i])
+            {
+                float dy_n = temp_opt(opts, mesh, col, row, slice, col, row - 1, slice, 1);
+                IB[i].Dist[3] = dy_n;
+            }
+            else
+            {
+                IB[i].Dist[3] = mesh->dy;
+            }
+        }
+
+        // Back
+
+        if(slice == nSlices - 1)
+        {
+            // Periodic Back
+            nbIdx = (0) * nRows * nCols + row * nCols + col;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dz_b = temp_opt(opts, mesh, col, row, slice, col, row, 0, 2);
+                IB[i].Dist[4] = dz_b;
+            }
+            else
+            {
+                IB[i].Dist[4] = mesh->dz;
+            }
+        }
+        else
+        {
+            // Not Periodic Front
+            nbIdx = (nSlices + 1) * nRows * nCols + row * nCols + col;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dz_b = temp_opt(opts, mesh, col, row, slice, col, row, slice - 1, 2);
+                IB[i].Dist[4] = dz_b;
+            }
+            else
+            {
+                IB[i].Dist[4] = mesh->dz;
+            }
+        }
+    
+        // Front
+
+        if(slice == 0)
+        {
+            // Periodic Front
+            nbIdx = (nSlices - 1) * nRows * nCols + row * nCols + col;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dz_f = temp_opt(opts, mesh, col, row, slice, col, row, nSlices - 1, 2);
+                IB[i].Dist[5] = dz_f;
+            }
+            else
+            {
+                IB[i].Dist[5] = mesh->dz;
+            }
+        }
+        else
+        {
+            // Not Periodic Front
+            nbIdx = (slice - 1) * nRows * nCols + row * nCols + col;
+            if(DC[nbIdx] != DC[i])
+            {
+                float dz_f = temp_opt(opts, mesh, col, row, slice, col, row, slice - 1, 2);
+                IB[i].Dist[5] = dz_f;
+            }
+            else
+            {
+                IB[i].Dist[5] = mesh->dz;
+            }
+        }
+    
+    } // end of for
+
+
+    
     return;
 }
 
@@ -999,6 +1298,14 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     
     float Q_avg = Calc_Q_SF(opts, mesh, Temperature, DC);
     save->SF = Q_avg/(opts->CLeft - opts->CRight);
+
+    // Calculate SF using the new approach
+
+    // allocate the struct
+
+    IBM_Correct *IBs = (IBM_Correct *)malloc(sizeof(IBM_Correct) * mesh->nElements);
+
+    correctIBs(DC, opts, mesh, IBs);
     
     // t50 Mandatory for sfSim
 

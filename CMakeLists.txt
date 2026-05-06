@@ -1,6 +1,7 @@
 # This file obviously doesn't work, but we will make it one day, trust
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # version information--------------------------
 project(TPMS-Characterization LANGUAGES CXX VERSION 1.0)
 
@@ -26,11 +27,11 @@ if (UNIX)
     if(CUDA_FOUND)
         set(CMAKE_CUDA_ARCHITECTURES all-major)
         enable_language(CUDA)
-        
+
         set(PROJECT_SOURCES
             src/main.cu
         )
-        
+
         include_directories(
             TPMS-Characterization PUBLIC
             "${PROJECT_SOURCE_DIR}/lib/cuda_solvers"
@@ -39,7 +40,7 @@ if (UNIX)
         set(CMAKE_CUDA_COMPILER "nvcc")
 
         add_definitions(-DUSE_CUDA)
-        
+
         # Add Executable --------------------------------------------
         add_executable(
             TPMS-Characterization
@@ -76,7 +77,7 @@ endif (UNIX)
 
 if(WIN32)
     find_package(OpenMP REQUIRED)
-    
+
     set(PROJECT_SOURCES
             src/main.cpp
     )

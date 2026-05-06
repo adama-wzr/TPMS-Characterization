@@ -1991,17 +1991,17 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     // Initializing temperature distribution
     memset(Temperature, 0, mesh->nElements * sizeof(float));
     
-    if(opts->verbose)
-        printf("Initializing Temperature\n");
+    // if(opts->verbose)
+    //     printf("Initializing Temperature\n");
 
-    TemperatureInit(Temperature, DC, mesh, opts);
+    // TemperatureInit(Temperature, DC, mesh, opts);
 
-    // Discretize
+    // // Discretize
 
-    if(opts->verbose)
-        printf("Discretizing\n");
+    // if(opts->verbose)
+    //     printf("Discretizing\n");
 
-    Disc3D_SF_PB(opts, mesh, DC, CoeffMatrix, RHS);
+    // Disc3D_SF_PB(opts, mesh, DC, CoeffMatrix, RHS);
 
     // Solve
 
@@ -2011,26 +2011,26 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
         Code runs fast on CPU, GPU coming soon.
     */
 
-    if(opts->useGPU)
-    {
-    //     errorFlag = gpuHandler(opts, mesh, save, Temperature, CoeffMatrix, RHS);
-    //     if(errorFlag)
-    //         return 1;
-    // }
-    // else
+    // if(opts->useGPU)
     // {
-    //     // cpuSolve
-    //     pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
-        printf("GPU not currently Supported. Using CPU instead.\n");
-    }
+    // //     errorFlag = gpuHandler(opts, mesh, save, Temperature, CoeffMatrix, RHS);
+    // //     if(errorFlag)
+    // //         return 1;
+    // // }
+    // // else
+    // // {
+    // //     // cpuSolve
+    // //     pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
+    //     printf("GPU not currently Supported. Using CPU instead.\n");
+    // }
 
     // CPU solve
-    pGS3D_SF_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
+    // pGS3D_SF_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
 
-    // Calculate SF
+    // // Calculate SF
     
-    float Q_avg = Calc_Q_SF(opts, mesh, Temperature, DC);
-    save->SF = Q_avg/(opts->CLeft - opts->CRight);
+    // float Q_avg = Calc_Q_SF(opts, mesh, Temperature, DC);
+    // save->SF = Q_avg/(opts->CLeft - opts->CRight);
 
     // Calculate SF using the new approach
 
@@ -2083,9 +2083,7 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     float Q_avg_IBs = Calc_Q_SF_IBs(opts, mesh, Temperature, DC, IBs);
 
-    printf("Q_avg = %1.3e Q_avg_IB = %1.3e\n", Q_avg, Q_avg_IBs);
-
-
+    save->SF = Q_avg_IBs/(opts->CLeft - opts->CRight);
 
     // t50 Mandatory for sfSim
 

@@ -2,7 +2,7 @@
 
 This file is dedicated to data structure definitions.
 
-Last modified 08/11/2025
+Last modified 05/25/2026
 Andre Adam
 
 */

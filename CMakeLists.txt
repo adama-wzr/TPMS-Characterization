@@ -95,10 +95,18 @@ endif(WIN32)
 
 set(TEST_SOURCES
     tests/saveTPMS.cpp
+    tests/surfaceMesh.cpp
 )
 
-add_executable(
-    saveTPMS
-    ${TEST_SOURCES}
-)
+foreach(SOURCE ${TEST_SOURCES})
+    get_filename_component(EXE_NAME ${SOURCE} NAME_WE)
+    
+    add_executable(${EXE_NAME} ${SOURCE})
+endforeach()
+
+
+# add_executable(
+#     saveTPMS
+#     ${TEST_SOURCES}
+# )
 

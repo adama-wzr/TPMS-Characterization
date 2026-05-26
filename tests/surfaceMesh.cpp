@@ -122,6 +122,10 @@ int main(int argc, char **argv)
 
     // marching cubes
 
+    MarchingCubesTriangles *MCT;
+
+    MarchingCubes(P, &opts, &mesh, MCT);
+
     printf("This doesn't do anything yet.\n");
 
     return 0;

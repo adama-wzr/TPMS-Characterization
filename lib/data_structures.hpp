@@ -145,6 +145,15 @@ typedef struct
 
 */
 
+typedef struct
+{
+    float x;
+    float y;
+    float z;
+}Point;
+
+
+// edgeToVertices[i] = {a, b} => edge i is between vertices a and b
 std::vector<std::pair<int, int>> edgeToVertices = 
 {
     {0, 1}, {1, 2}, {2, 3}, {0, 3},
@@ -152,6 +161,8 @@ std::vector<std::pair<int, int>> edgeToVertices =
     {0, 4}, {1, 5}, {2, 6}, {3, 7}
 };
 
+
+// edgeTable[i][j] = 1 if isosurface intersects edge j for cubeIndex i
 const int edgeTable[256] =
 {
     0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
@@ -188,8 +199,7 @@ const int edgeTable[256] =
     0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0   
 };
 
-/// triangleTable[i] is a list of edges forming triangles for cubeIndex i
-
+// triangleTable[i] is a list of edges forming triangles for cubeIndex i
 const int triangleTable[256][16] =
 {
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},

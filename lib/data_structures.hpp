@@ -13,6 +13,7 @@ Andre Adam
 #include <set>
 #include <tuple>
 #include <utility>
+#include <map>
 #include <vector>
 
 // Sub-Domain Information
@@ -123,16 +124,6 @@ typedef struct
 
 // Structs and tables needed for marching cubes algorithm
 
-typedef struct
-{
-    float Vertex_X[3];
-    float Vertex_Y[3];
-    float Vertex_Z[3];
-    float CenterCoords[3];
-    float NormalUnitVec[3];
-    float Area;
-}MarchingCubesTriangles;
-
 /*
 
     Lookup Tables obtained from:
@@ -145,12 +136,33 @@ typedef struct
 
 */
 
-typedef struct
+struct Point
 {
     float x;
     float y;
     float z;
-}Point;
+
+    bool operator<(const Point& rhs) const
+    {
+        if (x != rhs.x)
+            return x < rhs.x;
+        if (y != rhs.y)
+            return y < rhs.y;
+        return z < rhs.z;
+    }
+};
+
+typedef struct 
+{
+    Point vertex[8];
+    float value[8];
+}GridCell;
+
+typedef struct
+{
+    std::map<Point, int> vertexMap;
+    std::vector<std::vector<int>> triangles;
+}VertexContainer;
 
 
 // edgeToVertices[i] = {a, b} => edge i is between vertices a and b

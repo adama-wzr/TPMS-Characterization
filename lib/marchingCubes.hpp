@@ -1,6 +1,64 @@
+
+#ifndef _MC
+#define _MC
+
 #include <data_structures.hpp>
 #include <constants.hpp>
 #include <TPMS_definitions.hpp>
+
+VertexContainer hash_vertices_to_indices(std::vector<std::vector<Point>> &triangles)
+{
+    VertexContainer container;
+    int cnt = 0;
+    for (auto &triangle: triangles)
+    {
+        std::vector<int> indices;
+        for (auto &vertex: triangle)
+        {
+            if (container.vertexMap.count(vertex) == 0)
+            {
+                container.vertexMap[vertex] = cnt;
+                cnt++;
+            }
+            indices.push_back(container.vertexMap[vertex]);
+        }
+        container.triangles.push_back(indices);
+    }
+
+    return container;
+}
+
+void write_to_ply(std::vector<std::vector<Point>> &triangles, const char* path)
+{
+    VertexContainer container = hash_vertices_to_indices(triangles);
+    
+    std::ofstream outputFile;
+    outputFile.open(path);
+
+    outputFile << "ply\n";
+    outputFile << "format ascii 1.0\n";
+    outputFile << "element vertex " << container.vertexMap.size() << "\n";
+    outputFile << "property float32 x\n"; 
+    outputFile << "property float32 y\n";
+    outputFile << "property float32 z\n";
+    outputFile << "element face " << container.triangles.size() << "\n";
+    outputFile << "property list uint8 int32 vertex_indices\n";
+    outputFile << "end_header\n";
+
+    std::vector<Point> vertices (container.vertexMap.size());
+    for (auto &vertex: container.vertexMap)
+        vertices[vertex.second] = vertex.first;
+
+    for (auto &vertex: vertices)
+        outputFile << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+    for (auto &triangle: container.triangles)
+    {
+        outputFile << 3 << " ";
+        for (int index: triangle)
+            outputFile << index << " ";
+        outputFile << "\n";
+    }
+}
 
 Point LinearInterpolate(Point one, Point two)
 {
@@ -23,7 +81,7 @@ Point LinearInterpolate(Point one, Point two)
     return interpolated_result;
 }
 
-void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangles *MCT)
+void MarchingCubes(char *P, options *opts, meshInfo *mesh)
 {
     /*
         Function Marching Cubes:
@@ -31,7 +89,6 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
             - pointer to TPMS
             - pointer to usr options
             - pointer to mesh struct
-            - pointer to MarchingCubesTriangles struct
         Outputs:
             - None
         
@@ -42,9 +99,9 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
 
     long int nTriangles = 0;
 
-    // allocate MCT struct
+    // Get triangles
 
-    MCT = (MarchingCubesTriangles *)malloc(sizeof(MarchingCubesTriangles)*mesh->nElements);
+    std::vector<std::vector<Point>> triangles;
 
     int row, col, slice;
 
@@ -57,6 +114,8 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
         int col = i - slice * mesh->numCellsX * mesh->numCellsX - row * mesh->numCellsX;
 
         int cubeIndex = 0;
+
+        GridCell cell;
 
         // Find corners inside of the TPMS structure, update binary array
 
@@ -81,7 +140,13 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float y = -PI + (float)row * mesh->dy;
                 float z = -PI + (float)slice * mesh->dz + mesh->dz;
 
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues))
@@ -92,8 +157,14 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float x = -PI + (float)col * mesh->dx + mesh->dx;
                 float y = -PI + (float)row * mesh->dy;
                 float z = -PI + (float)slice * mesh->dz + mesh->dz;
-                
+
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues))
@@ -105,7 +176,13 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float y = -PI + (float)row * mesh->dy;
                 float z = -PI + (float)slice * mesh->dz;
 
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues))
@@ -117,7 +194,13 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float y = -PI + (float)row * mesh->dy;
                 float z = -PI + (float)slice * mesh->dz;
 
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues))
@@ -129,7 +212,13 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float y = -PI + (float)row * mesh->dy + mesh->dy;
                 float z = -PI + (float)slice * mesh->dz + mesh->dz;
 
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues))
@@ -141,7 +230,13 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float y = -PI + (float)row * mesh->dy + mesh->dy;
                 float z = -PI + (float)slice * mesh->dz + mesh->dz;
 
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues))
@@ -153,7 +248,13 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float y = -PI + (float)row * mesh->dy + mesh->dy;
                 float z = -PI + (float)slice * mesh->dz;
 
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues)) 
@@ -165,7 +266,13 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 float y = -PI + (float)row * mesh->dy + mesh->dy;
                 float z = -PI + (float)slice * mesh->dz;
 
+                cell.vertex[j].x = x;
+                cell.vertex[j].y = y;
+                cell.vertex[j].z = z;
+
                 float f = TPMS_F[opts->TPMS_Type - 1](x, y, z);
+
+                cell.value[j] = f;
                 
                 // update bits on cubeIndex accordingly
                 if(fabs(f) < fabs(opts->isoValues)) 
@@ -182,8 +289,9 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
         int edgeKey = edgeTable[cubeIndex];
 
         // find edge intercepts
-        int intercept[16][3];
         int idx = 0;
+
+        std::vector<Point> intercepts(12);
         
         while(edgeKey)
         {
@@ -192,25 +300,78 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh, MarchingCubesTriangle
                 int v1 = edgeToVertices[idx].first;
                 int v2 = edgeToVertices[idx].second;
 
+                Point p1 = cell.vertex[v1];
+                Point p2 = cell.vertex[v2];
+
                 // interpolate
 
+                /*
+
+                    In the future, we can use the opt algorithm here.
+                
+                */
+
+                Point interceptPoint;
+                
+                float intIso = (opts->isoValues - fabs(cell.value[v1]))/fabs((cell.value[v2] - cell.value[v1]));
+
+                interceptPoint.x = intIso * (p2.x - p1.x) + p1.x;
+                interceptPoint.y = intIso * (p2.y - p1.y) + p1.y;
+                interceptPoint.z = intIso * (p2.z - p1.z) + p1.z;
+
+                intercepts[idx] = interceptPoint;
+                if(fabs(interceptPoint.x) > PI || fabs(interceptPoint.y) > PI || fabs(interceptPoint.z) > PI)
+                {
+                    printf("Intercept: %1.3e,%1.3e,%1.3e\n", interceptPoint.x, interceptPoint.y, interceptPoint.z);
+                    printf("Iso: %1.3e,v1 %1.3e, v2 %1.3e\n", opts->isoValues, cell.value[v1], cell.value[v2]);
+                }
             }
+            idx++;
+            edgeKey >>= 1;
         }
 
-        for(int j = 0; j < 16; j++)
+        // save triangles
+
+        std::vector<std::vector<Point>> cellTriangles;
+        
+        for(int j = 0; (int)triangleTable[cubeIndex][j] != -1; j += 3)
         {
-            intercept[j][0] = -1;   // x
-            intercept[j][1] = -1;   // y
-            intercept[j][2] = -1;   // z
+            std::vector<Point> tri (3);
+            for(int k = 0; k < 3; k++)
+            {
+                tri[k] = intercepts[triangleTable[cubeIndex][j+k]];
+            }
+            cellTriangles.push_back(tri);
         }
 
-        // Populate edge intercepts w/ correct index
-
-
-
-
+        for(int j = 0; j < (int)cellTriangles.size(); j++)
+        {
+            triangles.push_back(cellTriangles[j]);
+            nTriangles++;
+        }
 
     } // endfor
 
+    // Save triangles to ply file
+    std::string filename = "test_triangles.ply";
+    std::cout << "Number of triangles: " << triangles.size() << "\n";
+    write_to_ply(triangles, filename.c_str());
+
+    // FILE *OUT = fopen("test.csv", "w+");
+
+    // fprintf(OUT, "x,y,z\n");
+
+    // for(int i = 0; i < nTriangles; i++)
+    // {
+    //     for(int j = 0; j < 3; j++){
+    //         fprintf(OUT, "%1.2e,%1.2e,%1.2e\n", triangles[i][j].x, triangles[i][j].y, triangles[i][j].z);
+    //     }
+    // }
+
+    // fclose(OUT);
+
     return;
 }
+
+
+#endif

@@ -5,6 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # version information--------------------------
 project(TPMS-Characterization LANGUAGES CXX VERSION 1.0)
 
+set(CMAKE_CXX_STANDARD 17)
+
 # Include directories -------------------------
 include_directories(
     TPMS-Characterization PUBLIC

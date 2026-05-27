@@ -122,9 +122,42 @@ int main(int argc, char **argv)
 
     // marching cubes
 
-    MarchingCubes(P, &opts, &mesh);
+    std::vector<std::vector<Point>> triangles;
 
-    printf("This doesn't do anything yet.\n");
+    triangles = MarchingCubes(&opts, &mesh);
+
+    // User entered index
+    acceptableInput = false;
+    while (!acceptableInput)
+    {
+        printf("Save as csv (0) or ply (1)?\n");
+        std::cin >> input;
+        if (input == 0 || input == 1)
+            acceptableInput = true;
+    }
+
+    if(input == 0)
+    {
+        FILE *OUT = fopen("triangles.csv", "w+");
+
+        fprintf(OUT, "x,y,z\n");
+
+        for(int i = 0; i < (int)triangles.size(); i++)
+        {
+            for(int j = 0; j < 3; j++){
+                fprintf(OUT, "%1.2e,%1.2e,%1.2e\n", triangles[i][j].x, triangles[i][j].y, triangles[i][j].z);
+            }
+        }
+
+        fclose(OUT);
+    }
+    else
+    {
+        // Save triangles to ply file
+        std::string filename = "triangles.ply";
+        std::cout << "Number of triangles: " << (int)triangles.size() << "\n";
+        write_to_ply(triangles, filename.c_str());
+    }
 
     return 0;
 }

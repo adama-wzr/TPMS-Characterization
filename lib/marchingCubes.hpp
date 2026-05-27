@@ -81,7 +81,7 @@ Point LinearInterpolate(Point one, Point two)
     return interpolated_result;
 }
 
-void MarchingCubes(char *P, options *opts, meshInfo *mesh)
+std::vector<std::vector<Point>> MarchingCubes(options *opts, meshInfo *mesh)
 {
     /*
         Function Marching Cubes:
@@ -96,8 +96,6 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh)
         the marching cubes method. Triangle locations are stored in the MCT
         struct.
     */
-
-    long int nTriangles = 0;
 
     // Get triangles
 
@@ -320,11 +318,11 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh)
                 interceptPoint.z = intIso * (p2.z - p1.z) + p1.z;
 
                 intercepts[idx] = interceptPoint;
-                if(fabs(interceptPoint.x) > PI || fabs(interceptPoint.y) > PI || fabs(interceptPoint.z) > PI)
-                {
-                    printf("Intercept: %1.3e,%1.3e,%1.3e\n", interceptPoint.x, interceptPoint.y, interceptPoint.z);
-                    printf("Iso: %1.3e,v1 %1.3e, v2 %1.3e\n", opts->isoValues, cell.value[v1], cell.value[v2]);
-                }
+                // if(fabs(interceptPoint.x) > PI || fabs(interceptPoint.y) > PI || fabs(interceptPoint.z) > PI)
+                // {
+                //     printf("Intercept: %1.3e,%1.3e,%1.3e\n", interceptPoint.x, interceptPoint.y, interceptPoint.z);
+                //     printf("Iso: %1.3e,v1 %1.3e, v2 %1.3e\n", opts->isoValues, cell.value[v1], cell.value[v2]);
+                // }
             }
             idx++;
             edgeKey >>= 1;
@@ -347,30 +345,11 @@ void MarchingCubes(char *P, options *opts, meshInfo *mesh)
         for(int j = 0; j < (int)cellTriangles.size(); j++)
         {
             triangles.push_back(cellTriangles[j]);
-            nTriangles++;
         }
 
-    } // endfor
+    } // endfor    
 
-    // Save triangles to ply file
-    std::string filename = "test_triangles.ply";
-    std::cout << "Number of triangles: " << triangles.size() << "\n";
-    write_to_ply(triangles, filename.c_str());
-
-    // FILE *OUT = fopen("test.csv", "w+");
-
-    // fprintf(OUT, "x,y,z\n");
-
-    // for(int i = 0; i < nTriangles; i++)
-    // {
-    //     for(int j = 0; j < 3; j++){
-    //         fprintf(OUT, "%1.2e,%1.2e,%1.2e\n", triangles[i][j].x, triangles[i][j].y, triangles[i][j].z);
-    //     }
-    // }
-
-    // fclose(OUT);
-
-    return;
+    return triangles;
 }
 
 

@@ -14,6 +14,7 @@ Andre Adam.
 #include <usrInput.hpp>
 #include <lib/subDomainFF.hpp>
 #include <lib/marchingCubes.hpp>
+#include <lib/surfaceArea.hpp>
 
 void printIndex(char max)
 {
@@ -130,9 +131,9 @@ int main(int argc, char **argv)
     acceptableInput = false;
     while (!acceptableInput)
     {
-        printf("Save as csv (0) or ply (1)?\n");
+        printf("Save as csv (0) or ply (1)? Skip (2)...\n");
         std::cin >> input;
-        if (input == 0 || input == 1)
+        if (input == 0 || input == 1 || input == 2)
             acceptableInput = true;
     }
 
@@ -151,13 +152,37 @@ int main(int argc, char **argv)
 
         fclose(OUT);
     }
-    else
+    else if(input == 1)
     {
         // Save triangles to ply file
         std::string filename = "triangles.ply";
         std::cout << "Number of triangles: " << (int)triangles.size() << "\n";
         write_to_ply(triangles, filename.c_str());
     }
+    else
+    {
+        // not saving anything bye
+        printf("Not saving, option selected was not recognized\n");
+    }
+
+    // Calculate Surface Area?
+
+    acceptableInput = false;
+
+    while (!acceptableInput)
+    {
+        printf("Surface Area? (0) Yes (1) No\n");
+        std::cin >> input;
+        if (input == 0 || input == 1)
+            acceptableInput = true;
+    }
+
+    if(input == 0)
+    {
+        SA_Triangles(&opts, triangles);
+    }
+
+
 
     return 0;
 }

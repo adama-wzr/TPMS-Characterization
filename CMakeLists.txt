@@ -5,6 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # version information--------------------------
 project(TPMS-Characterization LANGUAGES CXX VERSION 1.0)
 
+set(CMAKE_CXX_STANDARD 17)
+
 # Include directories -------------------------
 include_directories(
     TPMS-Characterization PUBLIC
@@ -95,10 +97,18 @@ endif(WIN32)
 
 set(TEST_SOURCES
     tests/saveTPMS.cpp
+    tests/surfaceMesh.cpp
 )
 
-add_executable(
-    saveTPMS
-    ${TEST_SOURCES}
-)
+foreach(SOURCE ${TEST_SOURCES})
+    get_filename_component(EXE_NAME ${SOURCE} NAME_WE)
+    
+    add_executable(${EXE_NAME} ${SOURCE})
+endforeach()
+
+
+# add_executable(
+#     saveTPMS
+#     ${TEST_SOURCES}
+# )
 

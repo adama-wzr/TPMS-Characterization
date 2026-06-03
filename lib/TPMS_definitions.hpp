@@ -1877,7 +1877,7 @@ int Slotted_P(char *P, float b, meshInfo *info)
     return 0;
 }
 
-int CreateSphere(char *P, meshInfo *info)
+int CreateSphere(char *P, float b, meshInfo *info)
 {
     /*
         CreateSphere Function:
@@ -1913,8 +1913,6 @@ int CreateSphere(char *P, meshInfo *info)
     centerZ = info->numCellsZ/2;
 
     float radius = info->numCellsX/3;
-
-
 
     // Begin main loop
 
@@ -2148,12 +2146,19 @@ float fCG(float x, float y, float z)
 				  2 * (sin(x) * cos(3 * y) + sin(y) * cos(3 * z) + sin(z) * cos(3 * x));
     return f;
 }
+
 float fSlotted_P(float x, float y, float z)
 {
     float f = -2 * (cos(x) * cos(y) + cos(y) * cos(z) + cos(z) * cos(x)) - 
 				   2 * (cos(2 * x) + cos(2 * y) + cos(2 * z)) + 
 				  (cos(2 * x) * cos(y) + cos(2 * y) * cos(z) + cos(2 * z) * cos(x)) -
 				  (cos(x) * cos(2 * y) + cos(y) * cos(2 * z) + cos(z) * cos(2 * x));
+    return f;
+}
+
+float fSphere(float x, float y, float z)
+{
+    float f = sqrt(pow(x,2) + pow(y,2) + pow(z,2));
     return f;
 }
 
@@ -2190,7 +2195,8 @@ tpms_ptr TPMS_Functions[] = {
 	W,
 	Qstar,
 	CG,
-	Slotted_P
+	Slotted_P,
+    CreateSphere
 };
 
 // TPMS functions
@@ -2222,7 +2228,8 @@ tpms_f_ptr TPMS_F[] = {
 	fW,
 	fQstar,
 	fCG,
-	fSlotted_P
+	fSlotted_P,
+    fSphere
 };
 
 #endif

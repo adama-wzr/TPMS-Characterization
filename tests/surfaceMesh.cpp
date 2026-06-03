@@ -10,7 +10,6 @@ Andre Adam.
 
 #include <stdio.h>
 #include <lib/TPMS_helpers.hpp>
-#include <lib/TPMS_helpers.hpp>
 #include <usrInput.hpp>
 #include <lib/subDomainFF.hpp>
 #include <lib/marchingCubes.hpp>
@@ -42,8 +41,8 @@ int main(int argc, char **argv)
 
     // Index max and min (beautifully hardcoded)
     int min, max;
-    min = 1;
-    max = 27;
+    min = 0;
+    max = 28;
 
     printIndex(max);
 

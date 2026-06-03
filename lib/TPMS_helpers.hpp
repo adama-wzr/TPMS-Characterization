@@ -31,7 +31,7 @@ static const char *TPMS_Names[] = {
     "G'2", "D'", "K",
     "C(S)", "Y", "+-Y",
     "C(+-Y)", "C(I2-Y)", "W",
-    "Q*", "C(G)", "Slotted-P"
+    "Q*", "C(G)", "Slotted-P","Sphere (Debug)"
 };
 
 /*
@@ -155,7 +155,11 @@ int TPMS_Init(char **P, options *opts, meshInfo *mesh)
     if(opts->TPMS_Type > 0 && opts->TPMS_Type < 27)
         TPMS_Functions[opts->TPMS_Type - 1](*P, opts->isoValues, mesh);
     else
-        CreateSphere(*P, mesh);
+    {
+        CreateSphere(*P, 0.0, mesh);
+        opts->isoValues =  2 * PI/ 3.0;
+        opts->TPMS_Type = 28;
+    }
 
     return 0;
 }

@@ -6,6 +6,253 @@
 #include <constants.hpp>
 #include <TPMS_definitions.hpp>
 
+Point temp_optMC(options *opts, meshInfo *mesh, Point p1, Point p2)
+{
+    /*
+    
+        This is just a placeholder function to test the code out.
+
+        if dir = 0, x
+        if dir = 1, y
+        if dir = 2, z
+    
+    */
+
+    Point interceptPoint;
+
+    // initialize things
+
+    interceptPoint.x = -1;
+    interceptPoint.y = -1;
+    interceptPoint.z = -1;
+
+    float eps = 1.000;
+    float ib_delta = 0.0;
+    
+    int steps = 100;
+
+    float step_size = 0;
+
+    int lb, ub;
+
+    // determine the direction
+
+    float dir_search = -1;
+
+    if(fabs(p1.x - p2.x) > mesh->dx/2)
+    {
+        dir_search = 0;
+    }
+    if(fabs(p1.y - p2.y) > mesh->dy/2)
+    {
+        if (dir_search != -1)
+            printf("Inaccurate vertex information?\n");
+        dir_search = 1;
+    }
+    if(fabs(p1.z - p2.z) > mesh->dz/2)
+    {
+        if (dir_search != -1)
+            printf("Inaccurate vertex information?\n");
+        dir_search = 2;
+    }
+
+    if(dir_search == 0)
+    {
+        // other intercepts and step size
+        interceptPoint.y = p1.y;
+        interceptPoint.z = p1.z;
+
+        step_size = fabs(p1.x - p2.x)/steps;
+
+        // find upper and lower bounds
+
+        if(p1.x < p2.x)
+        {
+            ub = p2.x;
+            lb = p1.x;
+        }
+        else if(p1.x > p2.x)
+        {
+            ub = p1.x;
+            lb = p2.x;
+        }
+        else
+        {
+            printf("Big mistake, deltaX not calculated properly\n");
+            return interceptPoint;
+        }
+
+        // find provisory eps and intercept
+
+        eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p1.x, p1.y, p1.z));
+
+        if(eps > fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p2.x, p2.y, p2.z)))
+        {
+            eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p2.x, p2.y, p2.z));
+            interceptPoint.x = p2.x;
+        }
+        else
+        {
+            interceptPoint.x = p1.x;
+        }
+
+        // iterate over other values
+
+        for(float i = lb; i < ub; i+=step_size)
+        {
+
+            float new_eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](i, p1.y, p1.z));
+            
+            if(new_eps < eps)
+            {
+                eps = new_eps;
+                interceptPoint.x = i;
+            }
+        }
+    }
+    else if(dir_search == 1)
+    {
+        // set other intercepts and step size
+        interceptPoint.x = p1.x;
+        interceptPoint.z = p1.z;
+        
+        step_size = fabs(p1.y - p2.y)/steps;
+
+        // upper and lower bounds
+
+        if(p1.y < p2.y)
+        {
+            ub = p2.y;
+            lb = p1.y;
+        }
+        else if(p1.y > p2.y)
+        {
+            ub = p1.y;
+            lb = p2.y;
+        }
+        else
+        {
+            printf("Big mistake, deltaX not calculated properly\n");
+            return interceptPoint;
+        }
+
+        // find provisory eps and intercept
+
+        eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p1.x, p1.y, p1.z));
+
+        if(eps > fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p2.x, p2.y, p2.z)))
+        {
+            eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p2.x, p2.y, p2.z));
+            interceptPoint.y = p2.y;
+        }
+        else
+        {
+            interceptPoint.y = p1.y;
+        }
+
+        // iterate
+
+        for(float i = lb; i < ub; i+=step_size)
+        {
+
+            float new_eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p1.x, i, p1.z));
+
+            if(new_eps < eps)
+            {
+                eps = new_eps;
+                interceptPoint.y = i;
+            }
+        }
+    }
+    else if(dir_search == 2)
+    {
+        // set other intercepts
+        interceptPoint.y = p1.y;
+        interceptPoint.x = p1.x;
+
+        step_size = fabs(p1.z - p2.z)/steps;
+
+        // upper and lower bounds
+
+        if(p1.z < p2.z)
+        {
+            ub = p2.z;
+            lb = p1.z;
+        }
+        else if(p1.z > p2.z)
+        {
+            ub = p1.z;
+            lb = p2.z;
+        }
+        else
+        {
+            printf("Big mistake, deltaX not calculated properly\n");
+            return interceptPoint;
+        }
+
+        // find provisory eps and intercept
+
+        eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p1.x, p1.y, p1.z));
+
+        if(eps > fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p2.x, p2.y, p2.z)))
+        {
+            eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p2.x, p2.y, p2.z));
+            interceptPoint.z = p2.z;
+        }
+        else
+        {
+            interceptPoint.z = p1.z;
+        }
+
+        // iterate
+
+        for(float i = lb; i < ub; i+=step_size)
+        {
+
+            float new_eps = fabs(opts->isoValues - TPMS_F[opts->TPMS_Type - 1](p1.x, p1.y, i));
+            
+            if(new_eps < eps)
+            {
+                eps = new_eps;
+                interceptPoint.z = i;
+            }
+        }
+    }
+
+    // check results
+
+    // if(dir_search == 0)
+    // {
+    //     if(p1.x > interceptPoint.x && p2.x > interceptPoint.x)
+    //     {
+    //         printf("Both p1.x and p2.x are greater than intercept!\n");
+    //     } else if(p1.x < interceptPoint.x && p2.x < interceptPoint.x)
+    //     {
+    //         printf("Both p1.x and p2.x are smaller than intercept!\n");
+    //     }
+    // }else if(dir_search == 1)
+    // {
+    //     if(p1.y > interceptPoint.y && p2.y > interceptPoint.y)
+    //     {
+    //         printf("Both p1.y and p2.y are greater than intercept!\n");
+    //     } else if(p1.y < interceptPoint.y && p2.y < interceptPoint.y)
+    //     {
+    //         printf("Both p1.y and p2.y are smaller than intercept!\n");
+    //     }
+    // }else if(dir_search == 2)
+    // {
+    //     if(p1.z > interceptPoint.z && p2.z > interceptPoint.z)
+    //     {
+    //         printf("Both p1.z and p2.z are greater than intercept!\n");
+    //     } else if(p1.z < interceptPoint.z && p2.z < interceptPoint.z)
+    //     {
+    //         printf("Both p1.z and p2.z are smaller than intercept!\n");
+    //     }
+    // }
+    
+    return interceptPoint;
+}
+
 VertexContainer hash_vertices_to_indices(std::vector<std::vector<Point>> &triangles)
 {
     VertexContainer container;
@@ -310,14 +557,30 @@ std::vector<std::vector<Point>> MarchingCubes(options *opts, meshInfo *mesh)
                 */
 
                 Point interceptPoint;
-                
-                float intIso = (opts->isoValues - fabs(cell.value[v1]))/fabs((cell.value[v2] - cell.value[v1]));
 
-                interceptPoint.x = intIso * (p2.x - p1.x) + p1.x;
-                interceptPoint.y = intIso * (p2.y - p1.y) + p1.y;
-                interceptPoint.z = intIso * (p2.z - p1.z) + p1.z;
+                /*
+                
+                    New Approach: Same as Immersed Boundary method
+
+                */
+
+                interceptPoint = temp_optMC(opts, mesh, p1, p2);
 
                 intercepts[idx] = interceptPoint;
+
+                /* 
+                
+                    Old Approach: Linear Interpolation
+                
+                */
+                
+                // float intIso = (opts->isoValues - fabs(cell.value[v1]))/fabs((cell.value[v2] - cell.value[v1]));
+
+                // interceptPoint.x = intIso * (p2.x - p1.x) + p1.x;
+                // interceptPoint.y = intIso * (p2.y - p1.y) + p1.y;
+                // interceptPoint.z = intIso * (p2.z - p1.z) + p1.z;
+
+                // intercepts[idx] = interceptPoint;
                 // if(fabs(interceptPoint.x) > PI || fabs(interceptPoint.y) > PI || fabs(interceptPoint.z) > PI)
                 // {
                 //     printf("Intercept: %1.3e,%1.3e,%1.3e\n", interceptPoint.x, interceptPoint.y, interceptPoint.z);

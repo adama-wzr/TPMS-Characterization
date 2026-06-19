@@ -199,8 +199,6 @@ std::vector<std::vector<Point>> MarchingCubes(options *opts, meshInfo *mesh)
 
     std::vector<std::vector<Point>> triangles;
 
-    int row, col, slice;
-
     // iterate over the whole image
     for(int i = 0; i < mesh->nElements; i++)
     {

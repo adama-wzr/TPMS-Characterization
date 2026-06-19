@@ -17,6 +17,7 @@ Andre Adam
 #include <output.hpp>
 #include <cpu_solvers/cpuSolvers.hpp>
 #include <surfaceArea.hpp>
+#include <marchingCubes.hpp>
 #include <sizeDistributions.hpp>
 #include <omp.h>
 #include "TPMS_definitions.hpp"
@@ -501,6 +502,146 @@ void TemperatureInit(float *Temperature, float *DC, meshInfo *mesh, options *opt
     free(Bool_L);
 
     return;
+}
+
+float bisectionIBM(options *opts, meshInfo *mesh, int col_idx, int row_idx, int slice_idx, int nb_col, int nb_row, int nb_slice, int dir_search)
+{
+    /*
+        Function bisectionIBM:
+        Inputs:
+            - pointer to opts
+            - pointer to mesh
+            - idx of current location
+            - idx of neighbor
+            - direction of search
+        Outputs:
+            - corrected delta
+
+        Function appplies the bisection method to find the exact
+        location of the interface in relation to the center of the 
+        two adjacent cells.
+     */
+
+    // setup variables
+
+    Point interceptPoint;
+
+    Point a, b, c;
+
+    Point p1, p2;
+
+    p1.x = col_idx*mesh->dx + mesh->dx/2 - PI;
+    p1.y = row_idx*mesh->dy + mesh->dy/2 - PI;
+    p1.z = slice_idx*mesh->dz + mesh->dz/2 - PI;
+
+    p2.x = nb_col*mesh->dx + mesh->dx/2 - PI;
+    p2.y = nb_row*mesh->dy + mesh->dy/2 - PI;
+    p2.z = nb_slice*mesh->dz + mesh->dz/2 - PI;
+
+    float p1_value = zeroFunction(opts, p1);
+    float p2_value = zeroFunction(opts, p2);
+
+    float tol = 1e-4;
+    int maxIter = 1e-4;
+    int iteration = 0;
+
+    float eps;
+
+    float delta = mesh->dx/2;
+
+    // check if either p1 or p2 are below tol
+
+    if(p1_value <= tol)
+        return 0.0;
+    else if(p2_value <= tol)
+        return mesh->dx;
+
+    // if p1.v or p2.v is within eps, return
+
+    if(p1_value < 0 && p2_value > 0)
+    {
+        a = p1;
+        b = p2;
+    }
+    else if(p1_value > 0 && p2_value < 0)
+    {
+        a = p2;
+        b = p1;
+    }
+    else
+    {
+        printf("Error! Intercept is out of range!\n");
+        printf("Values v1 = %1.3e, v2 = %1.3e\n", p1_value, p2_value);
+        return delta/2;
+    }
+
+    // find c
+
+    c.x = (p1.x + p2.x)/2;
+    c.y = (p1.y + p2.y)/2;
+    c.z = (p1.z + p2.z)/2;
+
+    eps = zeroFunction(opts, c);
+
+    if(eps <= tol)
+    {
+        float c1;
+        if(dir_search == 0)
+        {
+            c1 = c.x - p1.x;
+        }
+        else if(dir_search == 1)
+        {
+            c1 = c.y - p1.y;
+        }
+        else if(dir_search == 2)
+        {
+            c1 = c.z - p1.z;
+        }
+
+
+        return c1;
+    }
+
+    // otherwise, iterate
+    while (eps > tol && iteration < maxIter)
+    {
+        // assign new bounds
+        if(eps > 0)
+            b = c;
+        else if(eps < 0)
+            a = c;
+        
+        // find new c
+
+        c.x = (a.x + b.x)/2;
+        c.y = (a.y + b.y)/2;
+        c.z = (a.z + b.z)/2;
+
+        eps = zeroFunction(opts, c);
+
+        iteration++;
+    }
+
+    // assign intercept point
+    interceptPoint = c;
+
+    // use know direction to find the delta
+
+    if(dir_search == 0)
+    {
+        delta = interceptPoint.x - p1.x;
+    }
+    else if(dir_search == 1)
+    {
+        delta = interceptPoint.y - p1.y;
+    }
+    else if(dir_search == 2)
+    {
+        delta = interceptPoint.z - p1.z;
+    }
+
+    return delta;
 }
 
 float temp_opt(options *opts, meshInfo *mesh, int col_idx, int row_idx, int slice_idx, int nb_col, int nb_row, int nb_slice, int dir_search)

@@ -94,7 +94,7 @@ Point bisectionMethod(options *opts, meshInfo *mesh, Point p1, Point p2, float v
     c.y = (p1.y + p2.y)/2;
     c.z = (p1.z + p2.z)/2;
 
-    eps = zeroFunction(opts, c);
+    eps = fabs(zeroFunction(opts, c));
 
     if(eps <= tol)
         return c;
@@ -114,7 +114,7 @@ Point bisectionMethod(options *opts, meshInfo *mesh, Point p1, Point p2, float v
         c.y = (a.y + b.y)/2;
         c.z = (a.z + b.z)/2;
 
-        eps = zeroFunction(opts, c);
+        eps = fabs(zeroFunction(opts, c));
 
         iteration++;
     }

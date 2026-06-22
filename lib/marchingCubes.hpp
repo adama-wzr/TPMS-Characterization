@@ -43,10 +43,12 @@ Point bisectionMethod(options *opts, meshInfo *mesh, Point p1, Point p2, float v
 
     // setup
 
-    float tol = 1e-4;
+    float tol = 1e-6;
     int maxIter = 1e4;
     int iteration = 0;
     float eps;
+
+    float c_val;
 
     Point interceptPoint;
 
@@ -59,9 +61,9 @@ Point bisectionMethod(options *opts, meshInfo *mesh, Point p1, Point p2, float v
 
     // check if either p1 or p2 are below tol
 
-    if(p1_value <= tol)
+    if(fabs(p1_value) <= tol)
         return p1;
-    else if(p2_value <= tol)
+    else if(fabs(p2_value) <= tol)
         return p2;
 
     // if p1.v or p2.v is within eps, return
@@ -96,6 +98,8 @@ Point bisectionMethod(options *opts, meshInfo *mesh, Point p1, Point p2, float v
 
     eps = fabs(zeroFunction(opts, c));
 
+    c_val = zeroFunction(opts, c);
+
     if(eps <= tol)
         return c;
     
@@ -103,9 +107,9 @@ Point bisectionMethod(options *opts, meshInfo *mesh, Point p1, Point p2, float v
     while (eps > tol && iteration < maxIter)
     {
         // assign new bounds
-        if(eps > 0)
+        if(c_val > 0)
             b = c;
-        else if(eps < 0)
+        else if(c_val < 0)
             a = c;
         
         // find new c
@@ -114,7 +118,9 @@ Point bisectionMethod(options *opts, meshInfo *mesh, Point p1, Point p2, float v
         c.y = (a.y + b.y)/2;
         c.z = (a.z + b.z)/2;
 
-        eps = fabs(zeroFunction(opts, c));
+        c_val = zeroFunction(opts, c);
+        
+        eps = fabs(c_val);
 
         iteration++;
     }
@@ -398,20 +404,8 @@ std::vector<std::vector<Point>> MarchingCubes(options *opts, meshInfo *mesh)
                 Point p2 = cell.vertex[v2];
 
                 // interpolate
-
-                /*
-
-                    In the future, we can use the opt algorithm here.
                 
-                */
-
                 Point interceptPoint;
-
-                /*
-                
-                    New Approach: Same as Immersed Boundary method
-
-                */
 
                 interceptPoint = bisectionMethod(opts, mesh, p1, p2, cell.value[v1], cell.value[v2]);
 

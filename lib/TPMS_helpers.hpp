@@ -157,7 +157,7 @@ int TPMS_Init(char **P, options *opts, meshInfo *mesh)
     else
     {
         CreateSphere(*P, 0.0, mesh);
-        opts->isoValues =  2 * PI/ 3.0;
+        opts->isoValues =  2.0 * PI/ 3.0;
         opts->TPMS_Type = 28;
     }
 

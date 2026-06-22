@@ -1906,13 +1906,13 @@ int CreateSphere(char *P, float b, meshInfo *info)
 
     size_t count = 0;
 
-    int centerX, centerY, centerZ;
+    float centerX, centerY, centerZ;
 
-    centerX = info->numCellsX/2;
-    centerY = info->numCellsY/2;
-    centerZ = info->numCellsZ/2;
+    centerX = 0.0;
+    centerY = 0.0;
+    centerZ = 0.0; 
 
-    float radius = info->numCellsX/3;
+    float radius = 2.0 * PI/3.0;
 
     // Begin main loop
 
@@ -1923,7 +1923,11 @@ int CreateSphere(char *P, float b, meshInfo *info)
         int row = (i - slice * numCellsX * numCellsX) / numCellsX;
         int col = i - slice * numCellsX * numCellsX - row * numCellsX;
 
-        if (pow((col - centerX),2) + pow((row - centerY),2) + pow((slice - centerZ),2) <= pow(radius, 2))
+        float x = -PI + dx / 2.0 + (float)col * dx;
+        float y = -PI + dx / 2.0 + (float)row * dx;
+        float z = -PI + dx / 2.0 + (float)slice * dx;
+
+        if (pow((x - centerX),2) + pow((y - centerY),2) + pow((z - centerZ),2) <= pow(radius, 2))
         {
             P[i] = 1;
             count++;

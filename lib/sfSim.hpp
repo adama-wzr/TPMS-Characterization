@@ -643,7 +643,7 @@ float bisectionIBM(options *opts, meshInfo *mesh, int col_idx, int row_idx, int 
     float p1_value = zeroFunction(opts, p1);
     float p2_value = zeroFunction(opts, p2);
 
-    float tol = 1e-5;
+    float tol = 1e-6;
     int maxIter = 1e4;
     int iteration = 0;
 
@@ -751,11 +751,6 @@ float bisectionIBM(options *opts, meshInfo *mesh, int col_idx, int row_idx, int 
     {
         delta = mesh->dx/2000;
     }
-
-    if(delta != delta)
-        printf("NaN found!\n");
-
-    printf("Iter = %d, delta = %1.3e\n", iteration, delta);
 
     return delta;
 }

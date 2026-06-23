@@ -14,6 +14,7 @@ Andre Adam.
 #include <lib/subDomainFF.hpp>
 #include <lib/marchingCubes.hpp>
 #include <lib/surfaceArea.hpp>
+#include <string>
 
 void printIndex(char max)
 {
@@ -56,6 +57,8 @@ int main(int argc, char **argv)
 
         if (input >= min && input <= max)
             acceptableInput = true;
+        else
+            std::cin.clear();
     }
 
     // user entered size
@@ -71,9 +74,11 @@ int main(int argc, char **argv)
         if (nVoxel < 25)
         {
             printf("Too small, enter number >= 25.\n");
+            std::cin.clear();
         }
         else if (nVoxel >= 1000)
         {
+            std::cin.clear();
             printf("Too large, try a number < 1000.\n");
         }
         else
@@ -93,6 +98,7 @@ int main(int argc, char **argv)
         if (iso > TPMS_Crit[input - 1])
         {
             printf("Isovalue entered %2.1f is larger than crit value %2.1f. Please try again.\n", iso, TPMS_Crit[input - 1]);
+            std::cin.clear();
         }
         else
         {
@@ -134,11 +140,20 @@ int main(int argc, char **argv)
         std::cin >> input;
         if (input == 0 || input == 1 || input == 2)
             acceptableInput = true;
+        else
+            std::cin.clear();
     }
+
+    std::string filename;
 
     if(input == 0)
     {
-        FILE *OUT = fopen("triangles.csv", "w+");
+        printf("Enter file name (without extension):\n");
+        std::cin >> filename;
+
+        std::string file_ext = filename + ".csv";
+
+        FILE *OUT = fopen(file_ext.c_str(), "w+");
 
         fprintf(OUT, "x,y,z\n");
 
@@ -153,10 +168,12 @@ int main(int argc, char **argv)
     }
     else if(input == 1)
     {
+        printf("Enter file name (withiut extension):\n");
         // Save triangles to ply file
-        std::string filename = "triangles.ply";
+        std::cin >> filename;
+        std::string file_ext = filename + ".ply";
         std::cout << "Number of triangles: " << (int)triangles.size() << "\n";
-        write_to_ply(triangles, filename.c_str());
+        write_to_ply(triangles, file_ext.c_str());
     }
     else
     {
@@ -170,13 +187,15 @@ int main(int argc, char **argv)
 
     while (!acceptableInput)
     {
-        printf("Surface Area? (0) Yes (1) No\n");
+        printf("Surface Area? (0) No (1) Yes\n");
         std::cin >> input;
         if (input == 0 || input == 1)
             acceptableInput = true;
+        else
+            std::cin.clear();
     }
 
-    if(input == 0)
+    if(input == 1)
     {
         SA_Triangles(&opts, triangles);
     }

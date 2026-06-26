@@ -98,6 +98,7 @@ endif(WIN32)
 set(TEST_SOURCES
     tests/saveTPMS.cpp
     tests/surfaceMesh.cpp
+    tests/sfValidation.cpp
 )
 
 foreach(SOURCE ${TEST_SOURCES})

@@ -154,9 +154,9 @@ void generateFlowPassage(options *opts, meshInfo *mesh, geometry *geo, char *P)
     return;
 }
 
-void saveTH_Geometry(meshInfo *mesh, char *P)
+void saveTH_Geometry(meshInfo *mesh, char *P, std::string filename)
 {
-    FILE *SAVE = fopen("Geometry.csv", "w+");
+    FILE *SAVE = fopen(filename.c_str(), "w+");
 
     fprintf(SAVE, "x,y,z\n");
 
@@ -291,16 +291,40 @@ int main()
 
         generateFlowPassage(&opts, &mesh, &geo, P);
 
-        // save
-
-        saveTH_Geometry(&mesh, P);
-
     }
     else if(case_num == 2)
     {
         printf("------------------------------------------\n");
         printf("    Creating Long Cylindrical Layer\n");
         printf("------------------------------------------\n");
+    }
+
+    // Save structure?
+    acceptableInput = false;
+
+    bool saveStruct = false;
+    
+    printf("Save Geometry? (0) No (1) Yes\n");
+    std::cin >> saveStruct;
+
+    std::cin.clear();
+
+    // If user entered nonsense, then don't save
+
+    std::string geometry_filename;
+
+    if(saveStruct)
+    {
+        printf("Enter file name (without extension):\n");
+        std::cin >> geometry_filename;
+        std::string file_ext = geometry_filename + ".csv";
+        std::cin.clear();
+
+        saveTH_Geometry(&mesh, P, file_ext);
+    }
+    else
+    {
+        printf("Geometry won't be saved, moving on...\n");
     }
 
     return 0;

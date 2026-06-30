@@ -177,6 +177,50 @@ void saveTH_Geometry(meshInfo *mesh, char *P, std::string filename)
     return;
 }
 
+void fixSD_info(options *opts, meshInfo *mesh, geometry *geo, char *subDomain)
+{
+    /*
+     * Add function description later if it works.
+     *
+     *
+     * */
+    memset(subDomain, 0, sizeof(char)*mesh->nElements);
+
+    float dx = mesh->dx;
+
+    int numCellsX = mesh->numCellsX;
+
+    for(long int i = 0; i < mesh->nElements; i++)
+    {
+        // Break down i into the integer indexes
+        int slice = i / (numCellsX * numCellsX);
+        int row = (i - slice * numCellsX * numCellsX) / numCellsX;
+        int col = i - slice * numCellsX * numCellsX - row * numCellsX;
+        // Now get x,y,z numbers
+        float x = -PI + dx / 2.0 + (float)col * dx;
+        float y = -PI + dx / 2.0 + (float)row * dx;
+        float z = -PI + dx / 2.0 + (float)slice * dx;
+
+        float f = TH_CaseF[opts->TPMS_Type - 1](x,y,z, (geo->D2 + geo->D1)/2.0);
+
+        if(f < opts->isoValues && f > -opts->isoValues)
+        {
+            subDomain[i] = 0;
+        } else if(f >= opts->isoValues)
+        {
+            subDomain[i] = 1;
+        }else if(f <= -opts->isoValues)
+        {
+            subDomain[i] = 2;
+        }
+        else{
+            printf("Error on subDomain correction!\n");
+        }
+    }
+
+    return;
+}
+
 int main()
 {
     // declare data structure with general user options
@@ -327,6 +371,18 @@ int main()
     {
         printf("Geometry won't be saved, moving on...\n");
     }
+
+    // discretize and assign subDomains
+    char *subDomain = (char *)malloc(sizeof(char) * mesh.nElements);
+    memset(subDomain, 0, mesh.nElements)
+
+    float *DC = (float *)malloc(sizeof(float) * mesh.nElements);
+    memset(DC, 0, mesh.nElements);
+
+    fixSD_info(&opts, &mesh, &geo, subDomain);
+
+  
+
 
     return 0;
 }

@@ -40,6 +40,7 @@ typedef struct{
     float L;
     float D1;       // D1 is "a" for square flow passage
     float D2;       // D2 is "b" for square flow passage
+    float center;   // tipically the 4th input to th_case_f
 } geometry;
 
 typedef float (*th_case_f_ptr)(float, float, float, float);
@@ -52,7 +53,7 @@ typedef float (*th_case_f_ptr)(float, float, float, float);
 
 float sqPassage_F(float x, float y, float z, float w)
 {
-    float f = fabs(std::max(fabs(x),fabs(y)) - w/2.0);
+    float f = std::max(fabs(x),fabs(y)) - w/2.0;
     return f;
 }
 
@@ -143,7 +144,7 @@ void generateFlowPassage(options *opts, meshInfo *mesh, geometry *geo, char *P)
         y = -PI + (float) row * dy + dy / 2.0;
         z = -PI + (float) slice * dz + dz / 2.0;
 
-        float f = TH_CaseF[opts->TPMS_Type - 1](x,y,z, (geo->D2 + geo->D1)/2.0);
+        float f = TH_CaseF[opts->TPMS_Type - 1](x,y,z, geo->center);
 
         if(f < opts->isoValues && f > -opts->isoValues)
         {
@@ -285,8 +286,8 @@ int main()
         }
 
         // set isovalue
-        opts.isoValues = (geo.D2 - geo.D1)/2;
-
+        opts.isoValues = (geo.D2 - geo.D1)/4.0;
+        geo.center = (geo.D2 + geo.D1)/2.0;
         // generate structure
 
         generateFlowPassage(&opts, &mesh, &geo, P);

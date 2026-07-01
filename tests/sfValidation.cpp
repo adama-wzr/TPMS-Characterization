@@ -26,6 +26,7 @@
 #include <sizeDistributions.hpp>
 #include <surfaceArea.hpp>
 #include <marchingCubes.hpp>
+#include <cpu_solvers/cpuSolvers.hpp>
 
 /*
  *
@@ -591,6 +592,262 @@ void debug_BoundariesIB(options *opts, meshInfo *mesh, IBM_Correct *IB, float *D
  *
  *
  * */
+
+float Calc_Q_SF_IBs(options *opts, meshInfo *mesh, float *Temperature, float *DC, IBM_Correct *IB)
+{
+    /*
+        Function Calc_Q_SF_IBs:
+        Inputs:
+            - opts struct
+            - mesh struct
+            - Conc array, holding SF sim solutions
+            - DC array, holding discretized sub-domain information
+            - Immersed boundary corrected distances
+        Outputs:
+            - (float) Q_avg: average heat flux in the domain
+    */
+
+    // Initialize variables
+    float Q_Avg, Q_21, Q_13;
+
+    Q_21 = 0;
+    Q_13 = 0;
+
+    int slice, row, col;
+
+    int nRows, nCols, nSlices;
+    nCols = mesh->numCellsX;
+    nRows = mesh->numCellsY;
+    nSlices = mesh->numCellsZ;
+
+    // main loop:
+
+    for (long int i = 0; i < mesh->nElements; i++)
+    {
+        // if not participating media, ignore
+        if (DC[i] != 1)
+            continue;
+
+        // get index components
+        slice = i / (mesh->numCellsX * mesh->numCellsY);
+        row = (i - slice * mesh->numCellsX * mesh->numCellsY) / mesh->numCellsX;
+        col = (i - slice * mesh->numCellsY * mesh->numCellsX - row * mesh->numCellsX);
+
+        // check all faces for neighbors
+
+        if (col == 0)
+        {
+            // Periodic West
+            if (DC[i + nCols - 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (IB[i].Dist[0]);
+            }
+            else if (DC[i + nCols - 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (IB[i].Dist[0]);
+            }
+
+            // East
+            if (DC[i + 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (IB[i].Dist[1]);
+            }
+            else if (DC[i + 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (IB[i].Dist[1]);
+            }
+        }
+        else if (col == mesh->numCellsX - 1)
+        {
+            // West
+            if (DC[i - 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (IB[i].Dist[0]);
+            }
+            else if (DC[i - 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (IB[i].Dist[0]);
+            }
+
+            // Periodic East
+            if (DC[i - (mesh->numCellsX - 1)] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (IB[i].Dist[1]);
+            }
+            else if (DC[i - (mesh->numCellsX - 1)] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (IB[i].Dist[1]);
+            }
+        }
+        else
+        {
+            // West
+            if (DC[i - 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (IB[i].Dist[0]);
+            }
+            else if (DC[i - 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (IB[i].Dist[0]);
+            }
+
+            // East
+            if (DC[i + 1] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dz) / (IB[i].Dist[1]);
+            }
+            else if (DC[i + 1] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dz) / (IB[i].Dist[1]);
+            }
+        }
+
+        if (row == 0)
+        {
+            // Periodic North
+            if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (IB[i].Dist[3]);
+            }
+            else if (DC[slice * nCols * nRows + (nRows - 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (IB[i].Dist[3]);
+            }
+
+            // South
+            if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (IB[i].Dist[2]);
+            }
+            else if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (IB[i].Dist[2]);
+            }
+        }
+        else if (row == nRows - 1)
+        {
+            // North
+            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (IB[i].Dist[3]);
+            }
+            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (IB[i].Dist[3]);
+            }
+
+            // Periodic South
+            if (DC[slice * nCols * nRows + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (IB[i].Dist[2]);
+            }
+            else if (DC[slice * nCols * nRows + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (IB[i].Dist[2]);
+            }
+        }
+        else
+        {
+            // North
+            if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (IB[i].Dist[3]);
+            }
+            else if (DC[slice * nCols * nRows + (row - 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (IB[i].Dist[3]);
+            }
+
+            // South
+            if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dz * mesh->dx) / (IB[i].Dist[2]);
+            }
+            else if (DC[slice * nCols * nRows + (row + 1) * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dz * mesh->dx) / (IB[i].Dist[2]);
+            }
+        }
+
+        if (slice == 0)
+        {
+            // Periodic Front
+            if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (IB[i].Dist[5]);
+            }
+            else if (DC[(nSlices - 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (IB[i].Dist[5]);
+            }
+
+            // Back
+            if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (IB[i].Dist[4]);
+            }
+            else if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (IB[i].Dist[4]);
+            }
+        }
+        else if (slice == nSlices - 1)
+        {
+            // Front
+            if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (IB[i].Dist[5]);
+            }
+            else if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (IB[i].Dist[5]);
+            }
+
+            // Periodic Back
+            if (DC[row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (IB[i].Dist[4]);
+            }
+            else if (DC[row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (IB[i].Dist[4]);
+            }
+        }
+        else
+        {
+            // Front
+            if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (IB[i].Dist[5]);
+            }
+            else if (DC[(slice - 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (IB[i].Dist[5]);
+            }
+
+            // Back
+            if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 2)
+            {
+                Q_21 += (opts->CLeft - Temperature[i]) * (mesh->dy * mesh->dx) / (IB[i].Dist[4]);
+            }
+            else if (DC[(slice + 1) * nRows * nCols + row * nCols + col] == 3)
+            {
+                Q_13 += (Temperature[i] - opts->CRight) * (mesh->dy * mesh->dx) / (IB[i].Dist[4]);
+            }
+        }
+    } // end of the for loop
+
+    Q_Avg = (Q_13 + Q_21)/2;
+
+    if (opts->verbose)
+    {
+        printf("Shape Factor Simulation Results:\n");
+        printf("S = %1.3e, Q_21 = %1.3e, Q_13 = %1.3e, Pct. Error = %3.2f %%\n", Q_Avg/(opts->CLeft - opts->CRight), Q_21, Q_13, fabs((Q_21 - Q_13)/Q_21)*100);
+    }
+
+    return Q_Avg;
+}
+
 
 float zeroFunctionTH(options *opts, Point p, float center)
 {
@@ -1564,6 +1821,8 @@ int main()
     // declare data structure with general user options
     options opts;
     meshInfo mesh;
+    saveInfo save;
+
 
     geometry geo;
     solutions_sf sol;
@@ -1579,6 +1838,9 @@ int main()
     opts.CRight = 1;
 
     opts.sfTMAP = 1;
+
+    opts.MAX_ITER = 1e6;
+    opts.ConvergeCriteria = 1e-6;
 
     printIndex(2);      // hardcoded number of theoretical cases
 
@@ -1785,10 +2047,38 @@ int main()
 
     TemperatureInit(Temperature, DC, &mesh, &opts);
 
+    // CPU solve
+    pGS3D_SF_handle(&opts, &mesh, &save, CoeffMatrix, RHS, Temperature);
+
+    // Calculate Shape Factor
+
+    float Q_avg_IBs = Calc_Q_SF_IBs(&opts, &mesh, Temperature, DC, IBs);
+
+    save.SF = Q_avg_IBs/(opts.CLeft - opts.CRight);
+
+    float TH_SF = 0.0;
+
+    // hardcode theoretical cases because why not
+    if(case_num == 1)
+    {
+        if(geo.D2/geo.D1 > 1.4)
+        {
+            TH_SF = 2*PI*(2*PI)/(0.93*std::log(0.948*geo.D2/geo.D1));
+        }else
+        {
+            TH_SF = 2*PI*(2*PI)/(0.785*std::log(geo.D2/geo.D1));
+        }
+    }
+ 
+
+    printf("Simulated: %1.3e, Theoretical: %1.3e\n", save.SF, TH_SF);
+
+
     // save Temp?
     if(opts.sfTMAP)
         saveTemp_SF(DC, Temperature, &mesh);
-    
+
+
     // memory management
     free(Temperature);
     free(CoeffMatrix);

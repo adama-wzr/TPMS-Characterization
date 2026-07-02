@@ -62,9 +62,9 @@ float sqPassage_F(float x, float y, float z, float w)
     return f;
 }
 
-float cylTube_F(float x, float y, float z, float r)
+float cylTube_F(float x, float y, float z, float D)
 {
-    float f = x + y + z + r;
+    float f = std::sqrt(pow(x,2) + pow(y,2)) - D/2;
     return f;
 }
 
@@ -105,6 +105,57 @@ void printIndex(char max)
 
     printf("------------------------------------\n\n");
 
+    return;
+}
+
+void generateLongCylindricalLayer(options *opts, meshInfo *mesh, geometry *geo, char *P)
+{
+    /*
+     *  Function generateLongCylindricalLayer:
+     *  
+     *  Inputs:
+     *      - pointer to options opts;
+     *      - pointer to meshInfo mesh;
+     *      - pointer to geometry geo;
+     *      - pointer to char array holding structure;
+     *  Outputs;
+     *      - none
+     *
+     *  Function will create the long cylindrical layer according to the implicit equation
+     *  and the user-entered information.
+     *
+     * */
+
+    // define some stuff to make life easier
+    float dx = mesh->dx;
+    float dy = mesh->dy;
+    float dz = mesh->dz;
+    
+    int nCols = mesh->numCellsX;
+    int nRows = mesh->numCellsY;
+    int nSlices = mesh->numCellsZ;
+
+    float x, y, z;
+    int col, row, slice;
+
+    for(int i = 0; i < mesh->nElements; i++)
+    {
+        // get col, row, slice
+        slice = i / (nCols * nRows);
+        row = (i - slice * nCols * nRows) / nCols;
+        col = i - slice * nRows * nCols - row * nCols;
+
+        x = -PI + (float) col * dx + dx / 2.0;
+        y = -PI + (float) row * dy + dy / 2.0;
+        z = -PI + (float) slice * dz + dz / 2.0;
+
+        float f = TH_CaseF[opts->TPMS_Type - 1](x,y,z, geo->center);
+
+        if(f < opts->isoValues && f > -opts->isoValues)
+        {
+            P[i] = 1;
+        }
+    }
     return;
 }
 
@@ -1974,6 +2025,46 @@ int main()
         printf("------------------------------------------\n");
         printf("    Creating Long Cylindrical Layer\n");
         printf("------------------------------------------\n");
+
+        acceptableInput = false;
+
+        while(!acceptableInput)
+        {
+            printf("Enter inner-diameter (\"D1\"):\n");
+            std::cin >> geo.D1;
+            if(geo.D1 < 0.2 || geo.D1 > 5.75)
+            {
+                printf("Error, try a value between 0.2 and 5.75\n");
+                std::cin.clear();
+            }
+            else
+            {
+                acceptableInput = true;
+            }
+        }
+
+        acceptableInput = false;
+        while(!acceptableInput)
+        {
+            printf("Enter outer-diameter (\"D2\"):\n");
+            std::cin >> geo.D2;
+            if(geo.D2 < geo.D1 || geo.D2 > 5.75)
+            {
+                printf("Error, try a value between %1.2f and 5.75\n", geo.D1);
+                std::cin.clear();
+            }
+            else
+            {
+                acceptableInput = true;
+            }
+        }
+
+        // set isovalue
+        opts.isoValues = (geo.D2 - geo.D1)/4.0;
+        geo.center = (geo.D2 + geo.D1)/2.0;
+        // generate structure
+        generateLongCylindricalLayer(&opts, &mesh, &geo, P);
+
     }
 
     // Save structure?
@@ -2069,6 +2160,10 @@ int main()
             TH_SF = 2*PI*(2*PI)/(0.785*std::log(geo.D2/geo.D1));
         }
     }
+    else if(case_num == 2)
+    {
+        TH_SF = 2*PI*(2*PI)/(std::log(geo.D2/geo.D1));
+    }
  
 
     printf("Simulated: %1.3e, Theoretical: %1.3e\n", save.SF, TH_SF);
@@ -2077,7 +2172,6 @@ int main()
     // save Temp?
     if(opts.sfTMAP)
         saveTemp_SF(DC, Temperature, &mesh);
-
 
     // memory management
     free(Temperature);

@@ -1247,7 +1247,7 @@ std::vector<std::vector<Point>> MarchingCubesTH(options *opts, meshInfo *mesh, g
                 Point p2 = cell.vertex[v2];
 
                 // interpolate
-                
+
                 Point interceptPoint;
 
                 interceptPoint = bisectionMethodTH(opts, mesh, p1, p2, cell.value[v1], cell.value[v2], geo->center);
@@ -1281,6 +1281,66 @@ std::vector<std::vector<Point>> MarchingCubesTH(options *opts, meshInfo *mesh, g
 
     return triangles;
 }
+
+void SA_TrianglesTH(options *opts, std::vector<std::vector<Point>> triangles, saveInfo *save, geometry *geo)
+{
+    /*
+        Function SA_TrianglesTH:
+        Inputs:
+            - pointer to options
+            - vector with trangle vertices
+            - save struct
+            - geoemtry info (needed for TPMS function)
+        Outputs;
+            - none
+        
+        Function will calculate the unilateral surface area based
+        on the surface mesh.
+
+        Strategy:
+            - calculate two vectors from a vertice.
+            - cross-product
+
+        Area = 1/2 |cross-product|
+    
+    */
+
+    float A1 = 0;
+    float A2 = 0;
+
+    for(int i = 0; i < (int)triangles.size(); i++)
+    {
+        // two vectors:
+        Point v1, v2;
+
+        v1.x = triangles[i][2].x - triangles[i][0].x;
+        v1.y = triangles[i][2].y - triangles[i][0].y;
+        v1.z = triangles[i][2].z - triangles[i][0].z;
+
+        v2.x = triangles[i][1].x - triangles[i][0].x;
+        v2.y = triangles[i][1].y - triangles[i][0].y;
+        v2.z = triangles[i][1].z - triangles[i][0].z;
+
+        Point xp = CrossProduct(v1, v2);
+
+        float mag = VectorMagnitude(xp);
+
+        if(TH_CaseF[opts->TPMS_Type - 1](triangles[i][2].x, triangles[i][2].y, triangles[i][2].z, geo->center) > 0)
+        {
+            A1 += 1.0/2.0 * mag;
+        }
+        else
+        {
+            A2 += 1.0/2.0 * mag;
+        }
+    }
+
+    printf("Inner Area = %1.3e, Outer Area = %1.3e\n", A2, A1);
+    // save SSA
+    save->SA = (A1 + A2)/(pow((2.0 * PI),3));
+    return;
+}
+
 
 
 VertexContainer hash_vertices_to_indices(std::vector<std::vector<Point>> &triangles)
@@ -2345,6 +2405,7 @@ int main()
         {
             printf("Selected mesh size is not acceptable, try a number between 25 and 1000\n");
             std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
         else
         {
@@ -2584,6 +2645,9 @@ int main()
     {
         TH_SF = 2*PI*(2*PI)/(std::log(geo.D2/geo.D1));
     }
+
+    sol.SF_TH = TH_SF;
+    sol.SF_sim = save.SF;
  
 
     printf("Simulated: %1.3e, Theoretical: %1.3e\n", save.SF, TH_SF);
@@ -2620,7 +2684,7 @@ int main()
         // marchingCubes
         std::vector<std::vector<Point>> triangles;
         triangles = MarchingCubesTH(&opts, &mesh, &geo);
-        SA_Triangles(&opts, triangles, &save);
+        SA_TrianglesTH(&opts, triangles, &save, &geo);
 
         sol.area_MC = save.SA * pow((2.0 * PI), 3);
 
@@ -2658,7 +2722,7 @@ int main()
 
         if(saveMC)
         {
-             printf("Enter file name (withiut extension):\n");
+             printf("Enter file name (without extension):\n");
             // Save triangles to ply file
             std::cin >> filenameMC;
             std::string file_extMC = filenameMC + ".ply";
@@ -2667,7 +2731,50 @@ int main()
         }
     }
 
-    bool saveResults = false;
+    int saveResults;
+
+    acceptableInput = false;
+
+    while(!acceptableInput)
+    {
+        printf("Save Results to .csv? (0) No (1) Yes\n");
+        std::cin >> saveResults;
+        if(saveResults == 1 || saveResults == 0)
+        {
+            acceptableInput = true;
+        }
+        else
+        {
+            printf("Input not recognized, try again.\n");
+            std::cin.clear();
+        }
+    }
+
+    std::string filename_Results;
+    
+    if(saveResults)
+    {
+        printf("Enter filename (without extension):\n");
+        std::cin >> filename_Results;
+        std::string file_extRes = filename_Results + ".csv";
+
+        // check if file exists for header printing
+
+        bool headerFlag = true;
+
+        if(FILE *TEST = fopen(file_extRes.c_str(), "r"))
+        {
+            fclose(TEST);
+            headerFlag = false;
+        }
+
+        FILE *OUTPUT = fopen(file_extRes.c_str(), "a+");
+        if(headerFlag)
+            fprintf(OUTPUT, "Case, Voxel, a, b, SF_sim, SF_TH, A_Voxel, A_MC, A_TH\n");
+        fprintf(OUTPUT, "%d, %d, %f, %f, %f, %f, %f, %f, %f\n", opts.TPMS_Type,
+                mesh.numCellsX, geo.D1, geo.D2, sol.SF_sim, sol.SF_TH,
+                sol.area_Voxel, sol.area_MC, sol.area_TH);
+    }
 
 
 

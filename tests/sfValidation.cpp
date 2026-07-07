@@ -2635,6 +2635,36 @@ int main()
         }
 
         printf("Voxel = %1.3e, Marching Cubes = %1.3e, Analytic = %1.3e\n", sol.area_Voxel, sol.area_MC, sol.area_TH);
+
+        // save smooth MC surface?
+        acceptableInput = false;
+        int saveMC;
+        while(!acceptableInput)
+        {
+            printf("Save MC Surface? (0) No (1) Yes\n");
+            std::cin >> saveMC;
+            if(saveMC == 1 || saveMC == 0)
+            {
+                acceptableInput = true;
+            } else
+            {
+                std::cin.clear();
+            }
+        }
+
+        std::string filenameMC;
+
+        // save or skip
+
+        if(saveMC)
+        {
+             printf("Enter file name (withiut extension):\n");
+            // Save triangles to ply file
+            std::cin >> filenameMC;
+            std::string file_extMC = filenameMC + ".ply";
+            std::cout << "Number of triangles: " << (int)triangles.size() << "\n";
+            write_to_ply(triangles, file_extMC.c_str());
+        }
     }
 
     bool saveResults = false;

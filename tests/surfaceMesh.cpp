@@ -197,7 +197,8 @@ int main(int argc, char **argv)
 
     if(input == 1)
     {
-        SA_Triangles(&opts, triangles);
+        saveInfo save;
+        SA_Triangles(&opts, triangles, &save);
     }
 
 

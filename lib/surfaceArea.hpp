@@ -15,13 +15,14 @@ Andre Adam
 #include <utilities.hpp>
 #include <TPMS_definitions.hpp>
 
-void SA_Triangles(options *opts, std::vector<std::vector<Point>> triangles)
+void SA_Triangles(options *opts, std::vector<std::vector<Point>> triangles, saveInfo *save)
 {
     /*
         Function SA_Triangles:
         Inputs:
             - pointer to options
             - vector with trangle vertices
+            - save struct
         Outputs;
             - none
         
@@ -67,7 +68,8 @@ void SA_Triangles(options *opts, std::vector<std::vector<Point>> triangles)
     }
 
     printf("Inner Area = %1.3e, Outer Area = %1.3e\n", A1, A2);
-
+    // save SSA
+    save->SA = (A1 + A2)/(pow(2.0 * PI,3));
     return;
 }
 

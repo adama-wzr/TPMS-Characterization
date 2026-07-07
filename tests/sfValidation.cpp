@@ -39,6 +39,7 @@ typedef struct{
     float SF_sim;
     float area_MC;
     float area_Voxel;
+    float area_TH;
 } solutions_sf;
 
 typedef struct{
@@ -2168,10 +2169,58 @@ int main()
 
     printf("Simulated: %1.3e, Theoretical: %1.3e\n", save.SF, TH_SF);
 
-
     // save Temp?
     if(opts.sfTMAP)
         saveTemp_SF(DC, Temperature, &mesh);
+
+    acceptableInput = false;
+
+    int calcSA;
+
+    while(!acceptableInput)
+    {
+        printf("Validate Surface Area? (0) No (1) Yes\n");
+        std::cin >> calcSA;
+        if(calcSA == 0 || calcSA == 1)
+        {
+            acceptableInput = true;
+        }
+        else
+        {
+            std::cin.clear();
+        }
+    }
+
+    if(calcSA)
+    {
+        // make sure boundaries are periodic, otherwise we will have troubles.
+        opts.PB = 1;
+        SA(P, &mesh, &save, &opts);
+        sol.area_Voxel = save.SA * pow((2.0 * PI), 3);
+
+        // marchingCubes
+        std::vector<std::vector<Point>> triangles;
+        triangles = MarchingCubes(&opts, &mesh);
+        SA_Triangles(&opts, triangles, &save);
+
+        sol.area_MC = save.SA * pow((2.0 * PI), 3);
+
+        // theoretical results
+        if(case_num == 1)
+        {
+           sol.area_TH = 2 * PI * (4 * geo.D1 + 4 * geo.D2);
+        }
+        else if(case_num == 2)
+        {
+            sol.area_TH = 2 * PI * (PI*pow(geo.D1,2)/4 + PI*pow(geo.D2,2)/4);
+        }
+
+        printf("Voxel = %1.3e, Marching Cubes = %1.3e, Analytic = %1.3e\n", sol.area_Voxel, sol.area_MC, sol.area_TH);
+    }
+
+    bool saveResults = false;
+
+
 
     // memory management
     free(Temperature);

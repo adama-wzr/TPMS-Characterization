@@ -2695,7 +2695,7 @@ int main()
         }
         else if(case_num == 2)
         {
-            sol.area_TH = 2 * PI * (PI*pow(geo.D1,2)/4 + PI*pow(geo.D2,2)/4);
+            sol.area_TH = 2 * PI * (PI*geo.D1 + PI*geo.D2);
         }
 
         printf("Voxel = %1.3e, Marching Cubes = %1.3e, Analytic = %1.3e\n", sol.area_Voxel, sol.area_MC, sol.area_TH);

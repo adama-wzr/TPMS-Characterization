@@ -243,8 +243,10 @@ void printOptsGeneral(options *opts)
             printf("Printing Temperature Map sfTemp.csv\n");
     }
 
-    if (opts->runSA)
-        printf("Surface Area Calculation Enabled\n");
+    if (opts->runSA == 1)
+        printf("Surface Area Calculation Enabled: Voxel-Based\n");
+    else if(opts->runSA == 2)
+        printf("Surface Area Calculation Enabled: Marching Cubes\n");
 
     printf("----------------------------------\n\n");
 

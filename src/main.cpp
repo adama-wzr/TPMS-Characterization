@@ -88,12 +88,19 @@ int main(int argc, char **argv)
 
     */
 
-    if (opts.runSA)
+    if(opts.runSA == 1)
+    {
         SA(P, &mesh, &save, &opts);
-    
-    if (opts.runSA && opts.subOut)
-        SA_sub(&opts, &mesh, subDomains);
-        
+        if(opts.subOut)
+            SA_sub(&opts, &mesh, subDomains);
+    }
+    else if(opts.runSA == 2)
+    {
+        std::vector<std::vector<Point>> triangles;
+        triangles = MarchingCubes(&opts, &mesh);
+        SA_Triangles(&opts, triangles, &save);
+    }
+
     
     /*
     

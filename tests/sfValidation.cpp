@@ -2750,6 +2750,10 @@ int main()
     {
         TH_SF = 2*PI*(2*PI)/(std::log(geo.D2/geo.D1));
     }
+    else if(case_num == 3)
+    {
+        TH_SF = (2 * PI * geo.D1 * geo.D2)/(geo.D2 - geo.D1);
+    }
 
     sol.SF_TH = TH_SF;
     sol.SF_sim = save.SF;
@@ -2801,6 +2805,10 @@ int main()
         else if(case_num == 2)
         {
             sol.area_TH = 2 * PI * (PI*geo.D1 + PI*geo.D2);
+        }
+        else if(case_num == 3)
+        {
+            sol.area_TH = 4 * PI * pow(geo.D1/2,2) + 4 * PI * pow(geo.D2/2,2);
         }
 
         printf("Voxel = %1.3e, Marching Cubes = %1.3e, Analytic = %1.3e\n", sol.area_Voxel, sol.area_MC, sol.area_TH);

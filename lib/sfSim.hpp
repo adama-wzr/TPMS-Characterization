@@ -2634,14 +2634,6 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     // Calculate SF using the new approach
 
-    // initialize memory
-
-    memset(CoeffMatrix, 0, sizeof(float) * 7 * mesh->nElements);
-    memset(RHS, 0, mesh->nElements * sizeof(float));
-
-    // Initializing temperature distribution
-    memset(Temperature, 0, mesh->nElements * sizeof(float));
-
     // allocate the struct
 
     IBM_Correct *IBs = (IBM_Correct *)malloc(sizeof(IBM_Correct) * mesh->nElements);
@@ -2692,20 +2684,11 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     // debug_BoundariesIB(opts, mesh, IBs, DC, Temperature);
 
     save->SF = Q_avg_IBs/(opts->CLeft - opts->CRight);
-
-    // t50 Mandatory for sfSim
-
-    if(opts->partSD == 0)
-        partSD_3D(opts, mesh, save, P, 1);
-
+    
     // saveTemp
 
     if(opts->sfTMAP)
         saveTemp_SF(DC, Temperature, mesh);
-
-    // correct t50 from voxel to length
-    // float t50 = save->part50 * 2 * PI;
-    
 
     // memory management
     free(Temperature);

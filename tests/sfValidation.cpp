@@ -3093,11 +3093,113 @@ int main()
 
     printIndex(3);      // hardcoded number of theoretical cases
 
+    // get all optional user inputs declared here
+
+    bool inputFile = false;
+
+    unsigned int case_num;
+    unsigned int nThreads = 1; 
+    bool saveStruct = false;
+    int sfMode;
+    int calcSA;
+    int saveMC;
+    int saveResults;
+
+    // strings: 
+    std::string geometry_filename;
+    std::string filename_Results;
+    std::string filenameMC;
+
+    // check if input file exists, if yes, read it.
+
+    char inputFilename[50];
+    sprintf(inputFilename, "sfVal.txt");
+
+    if(FILE *INPUT = fopen(inputFilename, "r"))
+    {
+        fclose(INPUT);
+        inputFile = true;
+    }
+
+    // parse info
+    if(inputFile)
+    {
+        std::string myText;
+        char tempC[1000];
+        double tempD;
+        char tempFilenames[1000];
+        std::ifstream InputFile(inputFilename);
+
+        while(std::getline(InputFile, myText))
+        {
+            sscanf(myText.c_str(), "%s %lf", tempC, &tempD);
+            if(strcmp(tempC, "CaseNum:") == 0)
+            {
+                case_num = (unsigned int)tempD;
+            }
+            else if(strcmp(tempC, "nThreads:") == 0)
+            {
+                nThreads = (unsigned int)tempD;
+            }
+            else if(strcmp(tempC, "sfMode:") == 0)
+            {
+                sfMode = (int)tempD;
+            }
+            else if(strcmp(tempC, "calcSA:") == 0)
+            {
+                calcSA = (int)tempD;
+            }
+            else if(strcmp(tempC, "D1:") == 0)
+            {
+                geo.D1 = tempD;
+            }
+            else if(strcmp(tempC, "D2:") == 0)
+            {
+                geo.D2 = tempD;
+            }
+            else if(strcmp(tempC, "Mesh:") == 0)
+            {
+                mesh.numCellsX = (int)tempD;
+            }
+            else if(strcmp(tempC, "SaveMC:") == 0)
+            {
+                saveMC = (int)tempD;
+            }
+            else if(strcmp(tempC, "SaveRes:") == 0)
+            {
+                saveResults = (int)tempD;
+            }
+            else if(strcmp(tempC, "saveStruct:") == 0)
+            {
+                if((int)tempD == 0)
+                    saveStruct = false;
+                else
+                    saveStruct = true;
+            }
+            else if(strcmp(tempC, "FileGeo:") == 0)
+            {
+                sscanf(myText.c_str(), "%s %s", tempC, tempFilenames);
+                geometry_filename = tempFilenames;
+            }
+            else if(strcmp(tempC, "FileMC:") == 0)
+            {
+                sscanf(myText.c_str(), "%s %s", tempC, tempFilenames);
+                filenameMC = tempFilenames;
+            }
+            else if(strcmp(tempC, "FileRes:") == 0)
+            {
+                sscanf(myText.c_str(), "%s %s", tempC, tempFilenames);
+                filename_Results = tempFilenames;
+            }
+        }
+    }
+
     // Choose the case and mesh size
  
     bool acceptableInput = false;
 
-    unsigned int case_num;
+    if(inputFile)
+        acceptableInput = true;
 
     while(!acceptableInput)
     {
@@ -3114,6 +3216,9 @@ int main()
     opts.TPMS_Type = case_num;
 
     acceptableInput = false;
+
+    if(inputFile)
+        acceptableInput = true;
 
     while(!acceptableInput)
     {
@@ -3149,9 +3254,10 @@ int main()
     memset(DC, 0.0, sizeof(float) * mesh.nElements);
 
     // set omp parameters
-    unsigned int nThreads = 1;
-
     acceptableInput = false;
+
+    if(inputFile)
+        acceptableInput = true;
 
     while(!acceptableInput)
     {
@@ -3177,8 +3283,11 @@ int main()
         printf("------------------------------------------\n");
         printf("    Creating Square Flow Passage\n");
         printf("------------------------------------------\n");
-        
+
         acceptableInput = false;
+
+        if(inputFile)
+            acceptableInput = true;
 
         while(!acceptableInput)
         {
@@ -3196,6 +3305,10 @@ int main()
         }
 
         acceptableInput = false;
+        if(inputFile)
+            acceptableInput = true;
+
+
         while(!acceptableInput)
         {
             printf("Enter outer-side length (\"b\"):\n");
@@ -3226,6 +3339,9 @@ int main()
         printf("------------------------------------------\n");
 
         acceptableInput = false;
+        if(inputFile)
+            acceptableInput = true;
+
 
         while(!acceptableInput)
         {
@@ -3243,6 +3359,9 @@ int main()
         }
 
         acceptableInput = false;
+        if(inputFile)
+            acceptableInput = true;
+
         while(!acceptableInput)
         {
             printf("Enter outer-diameter (\"D2\"):\n");
@@ -3272,6 +3391,9 @@ int main()
         printf("------------------------------------------\n");
 
         acceptableInput = false;
+        if(inputFile)
+            acceptableInput = true;
+
 
         while(!acceptableInput)
         {
@@ -3289,6 +3411,10 @@ int main()
         }
 
         acceptableInput = false;
+        if(inputFile)
+            acceptableInput = true;
+
+
         while(!acceptableInput)
         {
             printf("Enter outer-diameter (\"D2\"):\n");
@@ -3313,22 +3439,23 @@ int main()
 
     // Save structure?
     acceptableInput = false;
+    if(inputFile)
+        acceptableInput = true;
 
-    bool saveStruct = false;
-    
-    printf("Save Geometry? (0) No (1) Yes\n");
-    std::cin >> saveStruct;
-
-    std::cin.clear();
+    while(!acceptableInput)
+    {
+        printf("Save Geometry? (0) No (1) Yes\n");
+        std::cin >> saveStruct;
+        acceptableInput = true;
+    }
 
     // If user entered nonsense, then don't save
-
-    std::string geometry_filename;
 
     if(saveStruct)
     {
         printf("Enter file name (without extension):\n");
-        std::cin >> geometry_filename;
+        if(!inputFile)
+            std::cin >> geometry_filename;
         std::string file_ext = geometry_filename + ".csv";
         std::cin.clear();
 
@@ -3352,9 +3479,8 @@ int main()
     // gather user input
 
     acceptableInput = false;
-
-    int sfMode;
-
+    if(inputFile)
+        acceptableInput = true;
     while(!acceptableInput)
     {
         printf("Select Shape Factor Simulation Mode:\n");
@@ -3531,7 +3657,8 @@ int main()
 
     acceptableInput = false;
 
-    int calcSA;
+    if(inputFile)
+        acceptableInput = true;
 
     while(!acceptableInput)
     {
@@ -3579,7 +3706,10 @@ int main()
 
         // save smooth MC surface?
         acceptableInput = false;
-        int saveMC;
+
+        if(inputFile)
+            acceptableInput = true;
+
         while(!acceptableInput)
         {
             printf("Save MC Surface? (0) No (1) Yes\n");
@@ -3593,7 +3723,6 @@ int main()
             }
         }
 
-        std::string filenameMC;
 
         // save or skip
 
@@ -3601,16 +3730,18 @@ int main()
         {
              printf("Enter file name (without extension):\n");
             // Save triangles to ply file
-            std::cin >> filenameMC;
+            if(!inputFile)
+                std::cin >> filenameMC;
             std::string file_extMC = filenameMC + ".ply";
             std::cout << "Number of triangles: " << (int)triangles.size() << "\n";
             write_to_ply(triangles, file_extMC.c_str());
         }
     }
 
-    int saveResults;
-
     acceptableInput = false;
+
+    if(inputFile)
+        acceptableInput = true;
 
     while(!acceptableInput)
     {
@@ -3627,12 +3758,11 @@ int main()
         }
     }
 
-    std::string filename_Results;
-    
     if(saveResults)
     {
         printf("Enter filename (without extension):\n");
-        std::cin >> filename_Results;
+        if(!inputFile)
+            std::cin >> filename_Results;
         std::string file_extRes = filename_Results + ".csv";
 
         // check if file exists for header printing

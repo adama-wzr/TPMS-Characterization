@@ -2574,8 +2574,7 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     SetDC_SF(DC, subDomain, mesh);
 
-
-    DC_loc_debug(opts, mesh, DC);
+    //DC_loc_debug(opts, mesh, DC);
 
     // allocate the arrays for simulation
 
@@ -2590,49 +2589,6 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     // Initializing temperature distribution
     memset(Temperature, 0, mesh->nElements * sizeof(float));
-    
-    // if(opts->verbose)
-    //     printf("Initializing Temperature\n");
-
-    // TemperatureInit(Temperature, DC, mesh, opts);
-
-    // // Discretize
-
-    // if(opts->verbose)
-    //     printf("Discretizing\n");
-
-    // Disc3D_SF_PB(opts, mesh, DC, CoeffMatrix, RHS);
-
-    // Solve
-
-    // bool errorFlag = 0;
-
-    /*
-        Code runs fast on CPU, GPU coming soon.
-    */
-
-    // if(opts->useGPU)
-    // {
-    // //     errorFlag = gpuHandler(opts, mesh, save, Temperature, CoeffMatrix, RHS);
-    // //     if(errorFlag)
-    // //         return 1;
-    // // }
-    // // else
-    // // {
-    // //     // cpuSolve
-    // //     pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
-    //     printf("GPU not currently Supported. Using CPU instead.\n");
-    // }
-
-    // CPU solve
-    // pGS3D_SF_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
-
-    // // Calculate SF
-    
-    // float Q_avg = Calc_Q_SF(opts, mesh, Temperature, DC);
-    // save->SF = Q_avg/(opts->CLeft - opts->CRight);
-
-    // Calculate SF using the new approach
 
     // allocate the struct
 
@@ -2643,8 +2599,8 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     correctIBs(DC, opts, mesh, IBs);
 
     // debug
-    
-    debug_BoundariesIB(opts, mesh, IBs, DC, Temperature);
+
+    // debug_BoundariesIB(opts, mesh, IBs, DC, Temperature);
 
     // Discretize
 
@@ -2661,14 +2617,6 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     if(opts->useGPU)
     {
-    //     errorFlag = gpuHandler(opts, mesh, save, Temperature, CoeffMatrix, RHS);
-    //     if(errorFlag)
-    //         return 1;
-    // }
-    // else
-    // {
-    //     // cpuSolve
-    //     pGS3D_handle(opts, mesh, save, CoeffMatrix, RHS, Temperature);
         printf("GPU not currently Supported. Using CPU instead.\n");
     }
 

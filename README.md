@@ -55,7 +55,7 @@ The CMAKE file is the same for Windows and Linux. It has been tested on Windows 
 If this code is useful to you, please consider citing the following publication(s):
 
 - Stallard, S., Adam, A., Yang, G., Bergman, T. L., & Li, X. (2026). Categorization of congruent TPMS by geometric features using manifold learning and clustering. Computational Materials Science, 268, 114667. https://doi.org/10.1016/j.commatsci.2026.114667
-- Adam, A., Stallard, S., Stallard, K., Yang, G., Bergman, T. L., & Li, X. (2026). Categorization of incongruent TPMS by geometric features using manifold learning and clustering. Computational Materials Science, 274, 114972. 10.1016/j.commatsci.2026.114972
+- Adam, A., Stallard, S., Stallard, K., Yang, G., Bergman, T. L., & Li, X. (2026). Categorization of incongruent TPMS by geometric features using manifold learning and clustering. Computational Materials Science, 274, 114972. https://doi.org/10.1016/j.commatsci.2026.114972
 
 # Authors
 

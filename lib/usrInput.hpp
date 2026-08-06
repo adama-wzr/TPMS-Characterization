@@ -44,6 +44,13 @@ int errorCheckInput(options *opts)
         as that constitutes a "broken" structure.
     */
 
+    if(opts->TPMS_Type <= 0)
+    {
+        if(opts->verbose)
+            printf("Special Case: Sphere\n");
+        return 0;
+    }
+
     // check crit
 
     if (opts->isoValues >= TPMS_Crit[opts->TPMS_Type - 1])
@@ -57,11 +64,9 @@ int errorCheckInput(options *opts)
     {
         printf("*********************************************************\n\n");
         printf("                        WARNING!!                        \n");
-        printf("Iso-Value %f for TPMS %s is beyond pinch value %f\n",
+        printf("Iso-Value %f for TPMS %s is beyond pinch value %f\n\n",
                opts->isoValues, TPMS_Names[opts->TPMS_Type - 1], TPMS_Pinch[opts->TPMS_Type - 1]);
-        printf("Skipping Tau-F simulation\n\n");
         printf("*********************************************************\n\n");
-        opts->Tau_f = 0;
     }
 
     return 0;
@@ -95,6 +100,7 @@ void optionsInit(options *opts)
     opts->partSD = 0;
     opts->CLeft = 0;
     opts->CRight = 1;
+    opts->runSF = 0;
 
     opts->subOut = 0;
     opts->printSD = 0;
@@ -112,6 +118,7 @@ void optionsInit(options *opts)
 
     // CMAP printing defaults to false
     opts->CMAP = 0;
+    opts->sfTMAP = 0;
 
     // Allocate Space for file names
 
@@ -169,8 +176,13 @@ void printOptsGeneral(options *opts)
     printf("----------------------------------\n\n");
     printf("         Selected Options:        \n\n");
     printf("-----------------------------------\n");
-
-    printf("TPMS Type = %s\n", TPMS_Names[opts->TPMS_Type - 1]);
+    if(opts->TPMS_Type > 0 && opts->TPMS_Type < 28)
+        printf("TPMS Type = %s\n", TPMS_Names[opts->TPMS_Type - 1]);
+    else
+    {
+        printf("Special Case: Sphere\n");
+        opts->runSF = 0;
+    }
     printf("IsoValues = %1.3f\n", opts->isoValues);
     printf("Side Length = %d\n", opts->nVoxels);
     printf("Number of CPU Threads = %d\n", opts->nThreads);
@@ -223,8 +235,18 @@ void printOptsGeneral(options *opts)
         }
     }
 
-    if (opts->runSA)
-        printf("Surface Area Calculation Enabled\n");
+    if(opts->runSF)
+    {
+        printf("Running Shape Factor Simulation\n");
+        printf("GPU solver not available, using CPU instead\n");
+        if(opts->sfTMAP)
+            printf("Printing Temperature Map sfTemp.csv\n");
+    }
+
+    if (opts->runSA == 1)
+        printf("Surface Area Calculation Enabled: Voxel-Based\n");
+    else if(opts->runSA == 2)
+        printf("Surface Area Calculation Enabled: Marching Cubes\n");
 
     printf("----------------------------------\n\n");
 
@@ -365,7 +387,11 @@ int readInputGeneral(char *filename, options *opts)
         }
         else if(strcmp(tempC, "runSF:") == 0)
         {
-            opts->printSD = (bool)tempD;
+            opts->runSF = (bool)tempD;
+        }
+        else if(strcmp(tempC, "sfTMAP:") == 0)
+        {
+            opts->sfTMAP = (bool)tempD;
         }
     }
     return 0;

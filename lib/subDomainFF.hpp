@@ -38,6 +38,8 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
     int nRows = mesh->numCellsY;
     int nSlices = mesh->numCellsZ;
 
+    mesh->nFC = 0;
+
     bool *checked = (bool *)malloc(sizeof(bool) * mesh->nElements);
 
     // search each sub-domain fully
@@ -249,6 +251,10 @@ void subDomainFC(meshInfo *mesh, char *subDomain)
         // calculate VF for this method
         mesh->sdInfo[nSub - 1].nElements = count;
         mesh->sdInfo[nSub-1].VF = (float)count / mesh->nElements;
+
+        // update mesh->nFC
+        if(mesh->sdInfo[nSub - 1].FC == 1)
+            mesh->nFC++;
     }
 
     return;
@@ -304,6 +310,7 @@ void subDomainFF(meshInfo *mesh, char *P, char *subDomains)
     int lastIdxChecked = 0;
 
     int nChannels = 0;
+    mesh->nChannels = nChannels;
 
     int row, col, slice;
 

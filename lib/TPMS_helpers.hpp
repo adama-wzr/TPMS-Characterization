@@ -31,13 +31,22 @@ static const char *TPMS_Names[] = {
     "G'2", "D'", "K",
     "C(S)", "Y", "+-Y",
     "C(+-Y)", "C(I2-Y)", "W",
-    "Q*", "C(G)", "Slotted-P"
+    "Q*", "C(G)", "Slotted-P","Sphere (Debug)"
 };
 
 /*
     Lookup table for TPMS Pinch:
 */
 
+
+/*
+
+    WARNING: THIS LIST IS OUTDATED
+
+    Several TPMS have multiple pinch points and multiple crit points.
+    Do not rely on the lookup tables below for incongruent TPMS.
+
+*/
 static const float TPMS_Pinch[] = {
     1.414f,
     0.999f,
@@ -143,8 +152,15 @@ int TPMS_Init(char **P, options *opts, meshInfo *mesh)
 
     // Call function to generate TPMS according to user input
 
-    TPMS_Functions[opts->TPMS_Type - 1](*P, opts->isoValues, mesh);
-    
+    if(opts->TPMS_Type > 0 && opts->TPMS_Type < 27)
+        TPMS_Functions[opts->TPMS_Type - 1](*P, opts->isoValues, mesh);
+    else
+    {
+        CreateSphere(*P, 0.0, mesh);
+        opts->isoValues =  2.0 * PI/ 3.0;
+        opts->TPMS_Type = 28;
+    }
+
     return 0;
 }
 

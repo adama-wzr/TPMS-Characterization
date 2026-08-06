@@ -1,8 +1,11 @@
 # This file obviously doesn't work, but we will make it one day, trust
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # version information--------------------------
 project(TPMS-Characterization LANGUAGES CXX VERSION 1.0)
+
+set(CMAKE_CXX_STANDARD 17)
 
 # Include directories -------------------------
 include_directories(
@@ -22,15 +25,15 @@ if (UNIX)
 
     find_package(OpenMP REQUIRED)
     find_package(CUDA QUIET)
-    #enable_language(CUDA)
 
     if(CUDA_FOUND)
+        set(CMAKE_CUDA_ARCHITECTURES all-major)
         enable_language(CUDA)
-        
+
         set(PROJECT_SOURCES
             src/main.cu
         )
-        
+
         include_directories(
             TPMS-Characterization PUBLIC
             "${PROJECT_SOURCE_DIR}/lib/cuda_solvers"
@@ -40,8 +43,6 @@ if (UNIX)
 
         add_definitions(-DUSE_CUDA)
 
-        
-        
         # Add Executable --------------------------------------------
         add_executable(
             TPMS-Characterization
@@ -49,34 +50,36 @@ if (UNIX)
         )
 
         set_property(TARGET TPMS-Characterization PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-        set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES all-major)
+        set_property(TARGET TPMS-Characterization PROPERTY CUDA_ARCHITECTURES 86)
 
         target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-fopenmp")
         target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
-
     else()
-        # No CUDA found
+        # CPU version
         set(PROJECT_SOURCES
             src/main.cpp
         )
         # Add Executable --------------------------------------------
         add_executable(
-            TPMS-Characterization
+            TPMS-Characterization-CPU
             ${PROJECT_SOURCES}
         )
-        find_package(OpenMP REQUIRED)
+
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-        target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
-        target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
+        target_link_libraries(TPMS-Characterization-CPU PRIVATE OpenMP::OpenMP_CXX)
+        target_compile_features(TPMS-Characterization-CPU PUBLIC cxx_std_17)
     endif()
+
 endif (UNIX)
 
 # Windows File (no GPU support) ------------------------------
 
 if(WIN32)
+    find_package(OpenMP REQUIRED)
+
     set(PROJECT_SOURCES
             src/main.cpp
     )
@@ -85,6 +88,7 @@ if(WIN32)
         TPMS-Characterization
         ${PROJECT_SOURCES}
     )
+    target_link_libraries(TPMS-Characterization PRIVATE OpenMP::OpenMP_CXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     target_compile_features(TPMS-Characterization PUBLIC cxx_std_17)
 endif(WIN32)
@@ -93,10 +97,19 @@ endif(WIN32)
 
 set(TEST_SOURCES
     tests/saveTPMS.cpp
+    tests/surfaceMesh.cpp
+    tests/sfValidation.cpp
 )
 
-add_executable(
-    saveTPMS
-    ${TEST_SOURCES}
-)
+foreach(SOURCE ${TEST_SOURCES})
+    get_filename_component(EXE_NAME ${SOURCE} NAME_WE)
+    
+    add_executable(${EXE_NAME} ${SOURCE})
+endforeach()
+
+
+# add_executable(
+#     saveTPMS
+#     ${TEST_SOURCES}
+# )
 

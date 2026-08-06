@@ -26,6 +26,7 @@ Andre Adam
 #include <lib/surfaceArea.hpp>
 #include <lib/TauSim.hpp>
 #include <lib/sizeDistributions.hpp>
+#include <lib/sfSim.hpp>
 #include <lib/output.hpp>
 #include <subDomainFF.hpp>
 #include <math.h>
@@ -101,13 +102,19 @@ int main(int argc, char **argv)
 
     */
 
-    if (opts.runSA)
+    if(opts.runSA == 1)
+    {
         SA(P, &mesh, &save, &opts);
-    
-    if (opts.runSA && opts.subOut)
-        SA_sub(&opts, &mesh, subDomains);
-        
-    
+        if(opts.subOut)
+            SA_sub(&opts, &mesh, subDomains);
+    }
+    else if(opts.runSA == 2)
+    {
+        std::vector<std::vector<Point>> triangles;
+        triangles = MarchingCubes(&opts, &mesh);
+        SA_Triangles(&opts, triangles, &save);
+    }
+
     /*
     
         Tortuosity:
@@ -124,7 +131,7 @@ int main(int argc, char **argv)
 
     if(errorFlag)
         return 1;
-    
+
     /*
     
         Size - Distributions:
@@ -142,6 +149,13 @@ int main(int argc, char **argv)
         poreSD_3D(&opts, &mesh, &save, P, subDomains, 0);
     else
         save.pore50 = 0;
+
+    // Shape Factors is last because it depends on others
+
+    if (opts.runSF)
+    {
+        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
+    }
 
     outputGeneral(&opts, &save, &mesh);
 

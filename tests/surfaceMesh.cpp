@@ -1,18 +1,20 @@
 /*
 
-Test function for printing the generated TPMS
-onto a csv file.
+Test function for printing the surface mesh
+of a TPMS based on the Marching Cubes algorithm.
 
-Last modified 04/02/2025
-Andre Adam
+Last modified 05/25/2026
+Andre Adam.
 */
+
 
 #include <stdio.h>
 #include <lib/TPMS_helpers.hpp>
-#include <lib/TPMS_helpers.hpp>
 #include <usrInput.hpp>
 #include <lib/subDomainFF.hpp>
-
+#include <lib/marchingCubes.hpp>
+#include <lib/surfaceArea.hpp>
+#include <string>
 
 void printIndex(char max)
 {
@@ -32,13 +34,6 @@ void printIndex(char max)
     return;
 }
 
-/*
-
-    Save TPMS
-
-*/
-
-
 int main(int argc, char **argv)
 {
     // Declare data structure with general user options
@@ -47,8 +42,8 @@ int main(int argc, char **argv)
 
     // Index max and min (beautifully hardcoded)
     int min, max;
-    min = 1;
-    max = 27;
+    min = 0;
+    max = 28;
 
     printIndex(max);
 
@@ -62,6 +57,8 @@ int main(int argc, char **argv)
 
         if (input >= min && input <= max)
             acceptableInput = true;
+        else
+            std::cin.clear();
     }
 
     // user entered size
@@ -77,9 +74,11 @@ int main(int argc, char **argv)
         if (nVoxel < 25)
         {
             printf("Too small, enter number >= 25.\n");
+            std::cin.clear();
         }
         else if (nVoxel >= 1000)
         {
+            std::cin.clear();
             printf("Too large, try a number < 1000.\n");
         }
         else
@@ -99,6 +98,7 @@ int main(int argc, char **argv)
         if (iso > TPMS_Crit[input - 1])
         {
             printf("Isovalue entered %2.1f is larger than crit value %2.1f. Please try again.\n", iso, TPMS_Crit[input - 1]);
+            std::cin.clear();
         }
         else
         {
@@ -126,81 +126,82 @@ int main(int argc, char **argv)
 
     TPMS_Init(&P, &opts, &mesh);
 
-    // Save
+    // marching cubes
+
+    std::vector<std::vector<Point>> triangles;
+
+    triangles = MarchingCubes(&opts, &mesh);
+
+    // User entered index
+    acceptableInput = false;
+    while (!acceptableInput)
+    {
+        printf("Save as csv (0) or ply (1)? Skip (2)...\n");
+        std::cin >> input;
+        if (input == 0 || input == 1 || input == 2)
+            acceptableInput = true;
+        else
+            std::cin.clear();
+    }
+
+    std::string filename;
+
+    if(input == 0)
+    {
+        printf("Enter file name (without extension):\n");
+        std::cin >> filename;
+
+        std::string file_ext = filename + ".csv";
+
+        FILE *OUT = fopen(file_ext.c_str(), "w+");
+
+        fprintf(OUT, "x,y,z\n");
+
+        for(int i = 0; i < (int)triangles.size(); i++)
+        {
+            for(int j = 0; j < 3; j++){
+                fprintf(OUT, "%1.2e,%1.2e,%1.2e\n", triangles[i][j].x, triangles[i][j].y, triangles[i][j].z);
+            }
+        }
+
+        fclose(OUT);
+    }
+    else if(input == 1)
+    {
+        printf("Enter file name (withiut extension):\n");
+        // Save triangles to ply file
+        std::cin >> filename;
+        std::string file_ext = filename + ".ply";
+        std::cout << "Number of triangles: " << (int)triangles.size() << "\n";
+        write_to_ply(triangles, file_ext.c_str());
+    }
+    else
+    {
+        // not saving anything bye
+        printf("Not saving, option selected was not recognized\n");
+    }
+
+    // Calculate Surface Area?
 
     acceptableInput = false;
-    int saveFlag;
 
     while (!acceptableInput)
     {
-        printf("Save sub-domain information (0), solid coordinates (1), or void coordinates (2)?\n");
-        std::cin >> saveFlag;
-        if (saveFlag == 0 || saveFlag == 1 || saveFlag == 2)
-        {
+        printf("Surface Area? (0) No (1) Yes\n");
+        std::cin >> input;
+        if (input == 0 || input == 1)
             acceptableInput = true;
-        }
         else
-        {
-            printf("The number entered is not one of the options. Try again!\n");
-        }
+            std::cin.clear();
     }
-    
-    char *subDomains;
 
-    if(saveFlag == 0)
+    if(input == 1)
     {
-        subDomains = (char *)malloc(sizeof(char) * mesh.nElements);
-        memset(subDomains, 0, sizeof(char) * mesh.nElements);
-        subDomainFF(&mesh, P, subDomains);
+        saveInfo save;
+        SA_Triangles(&opts, triangles, &save);
     }
 
-    /*
-        Need to modify this so we can pick folders, avoid overwrites, etc...
-    */
 
-    FILE *TPMS;
 
-    char OutputFilename[100];
-    sprintf(OutputFilename, "%s.csv", TPMS_Names[input - 1]);
-
-    TPMS = fopen(OutputFilename, "w+");
-
-    if(saveFlag == 0)
-    {
-        fprintf(TPMS,"x,y,z,sub\n");
-    }
-    else
-        fprintf(TPMS, "x,y,z\n");
-
-    int numCellsX = mesh.numCellsX;
-
-    for(int i = 0; i < mesh.nElements; i++)
-    {
-        // Break down i into the integer indexes
-        int slice = i / (numCellsX * numCellsX);
-        int row = (i - slice * numCellsX * numCellsX) / numCellsX;
-        int col = i - slice * numCellsX * numCellsX - row * numCellsX;
-
-        if(saveFlag == 0)
-        {
-            fprintf(TPMS, "%d,%d,%d,%d\n", col, row, slice, (int)subDomains[i]);
-        }else if(saveFlag == 1 && P[i] == 1)
-        {
-            fprintf(TPMS, "%d,%d,%d\n", col, row, slice);
-        }
-        else if(saveFlag == 2 && P[i] == 0)
-        {
-            fprintf(TPMS, "%d,%d,%d\n", col, row, slice);
-        }
-    }
-
-    if(saveFlag == 0)
-    {
-        free(subDomains);
-    }
-
-    free(P);
-
-    fclose(TPMS);
     return 0;
 }

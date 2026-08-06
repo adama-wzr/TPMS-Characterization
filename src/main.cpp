@@ -13,6 +13,7 @@ Andre Adam
 #include <lib/surfaceArea.hpp>
 #include <lib/TauSim.hpp>
 #include <lib/sizeDistributions.hpp>
+#include <lib/sfSim.hpp>
 #include <lib/output.hpp>
 #include <subDomainFF.hpp>
 #include <math.h>
@@ -78,7 +79,7 @@ int main(int argc, char **argv)
     mesh.sdInfo = (subDinfo *)malloc(sizeof(subDinfo) * mesh.nChannels);
 
     // Fully-Connected or not?
-
+    
     subDomainFC(&mesh, subDomains);
 
     /*
@@ -87,12 +88,19 @@ int main(int argc, char **argv)
 
     */
 
-    if (opts.runSA)
+    if(opts.runSA == 1)
+    {
         SA(P, &mesh, &save, &opts);
-    
-    if (opts.runSA && opts.subOut)
-        SA_sub(&opts, &mesh, subDomains);
-        
+        if(opts.subOut)
+            SA_sub(&opts, &mesh, subDomains);
+    }
+    else if(opts.runSA == 2)
+    {
+        std::vector<std::vector<Point>> triangles;
+        triangles = MarchingCubes(&opts, &mesh);
+        SA_Triangles(&opts, triangles, &save);
+    }
+
     
     /*
     
@@ -107,6 +115,7 @@ int main(int argc, char **argv)
     // solid space tortuosity
     if (opts.Tau_s)
         errorFlag = TauSim3D(&opts, &mesh, &save, P, subDomains, 1);
+
 
     if(errorFlag)
         return 1;
@@ -128,6 +137,13 @@ int main(int argc, char **argv)
         poreSD_3D(&opts, &mesh, &save, P, subDomains, 0);
     else
         save.pore50 = 0;
+    
+    // Shape Factors is last because it depends on others
+
+    if (opts.runSF)
+    {
+        SF_Sim3D(&opts, &mesh, &save, P, subDomains);
+    }
 
     outputGeneral(&opts, &save, &mesh);
 

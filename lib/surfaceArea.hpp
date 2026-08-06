@@ -9,8 +9,69 @@ Andre Adam
 #ifndef _SURF_AREA
 #define _SURF_AREA
 
+#include <omp.h>
 #include <data_structures.hpp>
 #include <constants.hpp>
+#include <utilities.hpp>
+#include <TPMS_definitions.hpp>
+
+void SA_Triangles(options *opts, std::vector<std::vector<Point>> triangles, saveInfo *save)
+{
+    /*
+        Function SA_Triangles:
+        Inputs:
+            - pointer to options
+            - vector with trangle vertices
+            - save struct
+        Outputs;
+            - none
+        
+        Function will calculate the unilateral surface area based
+        on the surface mesh.
+
+        Strategy:
+            - calculate two vectors from a vertice.
+            - cross-product
+
+        Area = 1/2 |cross-product|
+    
+    */
+
+    float A1 = 0;
+    float A2 = 0;
+
+    for(int i = 0; i < (int)triangles.size(); i++)
+    {
+        // two vectors:
+        Point v1, v2;
+
+        v1.x = triangles[i][2].x - triangles[i][0].x;
+        v1.y = triangles[i][2].y - triangles[i][0].y;
+        v1.z = triangles[i][2].z - triangles[i][0].z;
+
+        v2.x = triangles[i][1].x - triangles[i][0].x;
+        v2.y = triangles[i][1].y - triangles[i][0].y;
+        v2.z = triangles[i][1].z - triangles[i][0].z;
+
+        Point xp = CrossProduct(v1, v2);
+
+        float mag = VectorMagnitude(xp);
+
+        if(TPMS_F[opts->TPMS_Type - 1](triangles[i][2].x, triangles[i][2].y, triangles[i][2].z) > 0)
+        {
+            A1 += 1.0/2 * mag;
+        }
+        else
+        {
+            A2 += 1.0/2 * mag;
+        }
+    }
+
+    printf("Inner Area = %1.3e, Outer Area = %1.3e\n", A1, A2);
+    // save SSA
+    save->SA = (A1 + A2)/(pow(2.0 * PI,3));
+    return;
+}
 
 void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
 {
@@ -43,7 +104,7 @@ void SA(char *P, meshInfo *mesh, saveInfo *save, options *opts)
 
     // Loop over the whole structure
     int slice, row, col;
-
+    
     for (long int i = 0; i < mesh->nElements; i++)
     {
         // if P is not solid, continue

@@ -44,7 +44,8 @@ void fixSD_info(options *opts, meshInfo *mesh, char *subDomain)
      *
      *
      * */
-    // memset(subDomain, 0, sizeof(char)*mesh->nElements);
+    
+     // memset(subDomain, 0, sizeof(char)*mesh->nElements);
 
     float dx = mesh->dx;
 
@@ -2570,6 +2571,9 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
         printf("Error Detected: nChannels = %d, nFC = %d\n", mesh->nChannels, mesh->nFC);
         printf("Returning.....");
         return 1;
+    }else
+    {
+        printf("N-Channels Total: %d, nFC = %d\n", mesh->nChannels, mesh->nFC);
     }
 
     fixSD_info(opts, mesh, subDomain);
@@ -2578,7 +2582,8 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     SetDC_SF(DC, subDomain, mesh);
 
-    //DC_loc_debug(opts, mesh, DC);
+    // DC_loc_debug(opts, mesh, DC);
+    saveDC_SF(DC, mesh);
 
     // allocate the arrays for simulation
 

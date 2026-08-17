@@ -44,7 +44,7 @@ void fixSD_info(options *opts, meshInfo *mesh, char *subDomain)
      *
      *
      * */
-    memset(subDomain, 0, sizeof(char)*mesh->nElements);
+    // memset(subDomain, 0, sizeof(char)*mesh->nElements);
 
     float dx = mesh->dx;
 
@@ -68,10 +68,16 @@ void fixSD_info(options *opts, meshInfo *mesh, char *subDomain)
             subDomain[i] = 0;
         } else if(f >= opts->isoValues)
         {
-            subDomain[i] = 1;
+            if (mesh->sdInfo[subDomain[i] - 1].FC)
+                subDomain[i] = 1;
+            else
+                subDomain[i] = 3;
         }else if(f <= -opts->isoValues)
         {
-            subDomain[i] = 2;
+            if (mesh->sdInfo[subDomain[i] - 1].FC)
+                subDomain[i] = 2;
+            else
+                subDomain[i] = 3;
         }
         else{
             printf("Error on subDomain correction!\n");
@@ -1197,6 +1203,10 @@ void SetDC_SF(float *DC, char *subDomain, meshInfo *mesh)
             DC[i] = 2;
         else if(subDomain[i] == 2)
             DC[i] = 3;
+        else if(subDomain[i] == 3)
+        {
+            DC[i] = 4;
+        }
     }
 
     return;
@@ -1264,7 +1274,7 @@ int Disc3D_SF_PB(options *opts,
             https://doi.org/10.1016/j.ijheatmasstransfer.2009.12.057
         */
 
-        if (fabs(DC[i] - 1) > 0.5)
+        if (DC[i] == 1 || DC[i] == 4)
         {
             // 1 * phi = 0;
             CoeffMatrix[i * 7 + 0] = 1;
@@ -1667,7 +1677,7 @@ int Disc3D_IB_SF(options *opts,
             https://doi.org/10.1016/j.ijheatmasstransfer.2009.12.057
         */
 
-        if (fabs(DC[i] - 1) > 0.5 )
+        if (DC[i] == 1 || DC[i] == 4 )
         {
             // 1 * phi = 0;
             CoeffMatrix[i * 7 + 0] = 1;
@@ -2555,19 +2565,13 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
 
     // Sub-Domain Info is absolutely necessary for this simulation
 
-    if(mesh->nChannels != 2)
+    if(mesh->nFC < 2)
     {
         printf("Error Detected: nChannels = %d, nFC = %d\n", mesh->nChannels, mesh->nFC);
         printf("Returning.....");
         return 1;
-        /*
-        
-        NEED TO ALSO CHECK IF THEY ARE FULLY CONNECTED!
-        CURRENTLY NOT CHECKED!!!!!!
-
-        */
     }
-    
+
     fixSD_info(opts, mesh, subDomain);
 
     // Populate the array based on the structure

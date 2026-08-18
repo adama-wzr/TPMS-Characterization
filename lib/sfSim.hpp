@@ -79,8 +79,8 @@ void fixSD_info(options *opts, meshInfo *mesh, char *subDomain)
                 subDomain[i] = 2;
             else
                 subDomain[i] = 3;
-        }
-        else{
+        }else
+        {
             printf("Error on subDomain correction!\n");
         }
     }
@@ -1275,7 +1275,7 @@ int Disc3D_SF_PB(options *opts,
             https://doi.org/10.1016/j.ijheatmasstransfer.2009.12.057
         */
 
-        if (DC[i] == 1 || DC[i] == 4)
+        if (fabs(DC[i] - 1) > 0.5)
         {
             // 1 * phi = 0;
             CoeffMatrix[i * 7 + 0] = 1;
@@ -1678,7 +1678,7 @@ int Disc3D_IB_SF(options *opts,
             https://doi.org/10.1016/j.ijheatmasstransfer.2009.12.057
         */
 
-        if (DC[i] == 1 || DC[i] == 4 )
+        if (fabs(DC[i] - 1) > 0.5)
         {
             // 1 * phi = 0;
             CoeffMatrix[i * 7 + 0] = 1;
@@ -2310,7 +2310,7 @@ float Calc_Q_SF_IBs(options *opts, meshInfo *mesh, float *Temperature, float *DC
     for (long int i = 0; i < mesh->nElements; i++)
     {
         // if not participating media, ignore
-        if (DC[i] != 1)
+        if (fabs(DC[i]-1) > 0.5)
             continue;
 
         // get index components
@@ -2583,7 +2583,7 @@ int SF_Sim3D(options *opts, meshInfo *mesh, saveInfo *save, char *P, char *subDo
     SetDC_SF(DC, subDomain, mesh);
 
     // DC_loc_debug(opts, mesh, DC);
-    saveDC_SF(DC, mesh);
+    // saveDC_SF(DC, mesh);
 
     // allocate the arrays for simulation
 

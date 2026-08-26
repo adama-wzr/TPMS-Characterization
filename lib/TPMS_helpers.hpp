@@ -152,7 +152,7 @@ int TPMS_Init(char **P, options *opts, meshInfo *mesh)
 
     // Call function to generate TPMS according to user input
 
-    if(opts->TPMS_Type > 0 && opts->TPMS_Type < 27)
+    if(opts->TPMS_Type > 0 && opts->TPMS_Type < 28)
         TPMS_Functions[opts->TPMS_Type - 1](*P, opts->isoValues, mesh);
     else
     {
